@@ -35,8 +35,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .header-title{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,48px);font-weight:600;line-height:1.1;}
 .header-title span{color:var(--accent);font-style:italic;}
 .header-sub{font-size:13px;color:var(--text2);margin-top:6px;font-weight:300;}
+.header-right{display:flex;align-items:center;gap:10px;}
 .btn-theme{background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .2s;}
 .btn-theme:hover{border-color:var(--accent);color:var(--accent);}
+.sync-status{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;}
 .stat{display:flex;align-items:center;gap:10px;padding:16px 24px 16px 0;margin-right:24px;border-right:1px solid var(--border);flex-shrink:0;}
@@ -151,7 +158,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .btn-del-cancel{background:none;border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;}
 
 .footer{border-top:1px solid var(--border);padding:12px 32px;font-size:11px;color:var(--text3);display:flex;justify-content:space-between;background:var(--surface);}
-.footer-dot{color:var(--green);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;box-shadow:var(--shadow-lg);z-index:400;animation:toastIn .2s ease;display:flex;align-items:center;gap:8px;}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 @media(max-width:600px){
   .header,.controls,.cards-wrap,.tl-controls,.tl-wrap{padding-left:16px;padding-right:16px;}
@@ -170,7 +179,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     <div class="header-title">Mon <span>Répertoire</span></div>
     <div class="header-sub">Elise &amp; Camille G. — depuis octobre 2021</div>
   </div>
-  <button class="btn-theme" onclick="toggleTheme()" id="btn-theme" title="Changer de thème">🌙</button>
+  <div class="header-right">
+    <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Chargement…</span></div>
+    <button class="btn-theme" onclick="toggleTheme()" id="btn-theme" title="Changer de thème">🌙</button>
+  </div>
 </div>
 
 <div class="stats" id="statsBar"></div>
@@ -201,13 +213,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     </select>
     <button class="btn-primary" onclick="openModal()">+ Ajouter</button>
     <button class="btn-secondary" onclick="exportPDF()">⬇ Export PDF</button>
-    <button class="btn-secondary" onclick="copyData()" id="btn-copy">⎘ Copier données</button>
   </div>
   <div id="delete-confirm-wrap"></div>
   <div class="cards-wrap" id="cardsWrap"></div>
   <div class="footer">
-    <span>Sauvegarde auto <span class="footer-dot">●</span> navigateur</span>
     <span id="footer-count"></span>
+    <span id="footer-last-sync"></span>
   </div>
 </div>
 
@@ -256,11 +267,20 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 </div>
 
 <script>
-const KEY = 'piano_rep_v3';
-let pieces = [], editingIdx = null, pendingDeleteIdx = null;
+// ── CONFIG GITHUB ──
+const GH_OWNER = 'EL-webapp';
+const GH_REPO  = 'piano';
+const GH_FILE  = 'data.json';
+const GH_EMAIL = 'eliselamic@hotmail.com';
+const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+function getToken() { return localStorage.getItem('gh_token'); }
+function setToken(t) { localStorage.setItem('gh_token', t); }
+
+let pieces = [], fileSha = null, editingIdx = null, pendingDeleteIdx = null, lastSync = null;
 
 const BAKED = [
-  {"title":"Aria BWV 516 (Petit livre d'Anna Magdalena Bach)","composer":"J.S. Bach","level":"débutant","status":"en-pause","startDate":"2021-10-14","endDate":"2021-11-18","notes":"Pourquoi es-tu si triste..."},
+  {"title":"Aria BWV 516 (Petit livre d'Anna Magdalena Bach)","composer":"J.S. Bach","level":"débutant","status":"en-pause","startDate":"2021-10-14","endDate":"2021-11-18","notes":""},
   {"title":"Prélude & Fugue II (Do min) BWV 847","composer":"J.S. Bach","level":"intermédiaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
   {"title":"Rêverie","composer":"Debussy","level":"intermédiaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
   {"title":"Suite Française III (Si min) BWV 814","composer":"J.S. Bach","level":"intermédiaire","status":"en-pause","startDate":"2021-11-25","endDate":"2022-03-10","notes":""},
@@ -270,51 +290,120 @@ const BAKED = [
   {"title":"Sonate 19 (Mi min) Hoboken XVI:47","composer":"Haydn","level":"intermédiaire","status":"en-pause","startDate":"2022-06-16","endDate":"2022-09-29","notes":""}
 ];
 
-// ── Couleurs timeline (pastels vifs pour barres)
+// ── COULEURS ──
 const TL_COLORS = ['#a8c4e0','#f0b8a8','#a8d4b8','#f0d8a0','#d4b0cc','#a8d8d4','#f0c8a0','#b8d0a8','#c8b8e0','#f0b8c8'];
-// ── Couleurs compositeurs cartes (pastels distincts des statuts/niveaux)
-const C_COLORS = [
-  {bg:'#dce8f5',text:'#1a3a6a'},
-  {bg:'#fde8d8',text:'#7a3010'},
-  {bg:'#f0e8f8',text:'#4a2080'},
-  {bg:'#e0f0f0',text:'#1a5858'},
-  {bg:'#fdf0d8',text:'#6a4008'},
-  {bg:'#f8e8f0',text:'#7a1848'},
-  {bg:'#e8eef8',text:'#1a2860'},
-  {bg:'#f8f0e0',text:'#5a3808'},
-  {bg:'#e8f8f8',text:'#0a5050'},
-  {bg:'#f0e0f8',text:'#501870'},
+const C_COLORS  = [
+  {bg:'#dce8f5',text:'#1a3a6a'},{bg:'#fde8d8',text:'#7a3010'},
+  {bg:'#f0e8f8',text:'#4a2080'},{bg:'#e0f0f0',text:'#1a5858'},
+  {bg:'#fdf0d8',text:'#6a4008'},{bg:'#f8e8f0',text:'#7a1848'},
+  {bg:'#e8eef8',text:'#1a2860'},{bg:'#f8f0e0',text:'#5a3808'},
+  {bg:'#e8f8f8',text:'#0a5050'},{bg:'#f0e0f8',text:'#501870'},
 ];
-
 let tlColorMap = {}, cColorMap = {}, tlSY = currentSY();
+function tlColorFor(c){if(!tlColorMap[c])tlColorMap[c]=TL_COLORS[Object.keys(tlColorMap).length%TL_COLORS.length];return tlColorMap[c];}
+function cColorFor(c) {if(!cColorMap[c]) cColorMap[c]=C_COLORS[Object.keys(cColorMap).length%C_COLORS.length]; return cColorMap[c];}
+function composerBadge(c){const col=cColorFor(c);return `<span class="badge" style="background:${col.bg};color:${col.text}">${esc(c)}</span>`;}
 
-function tlColorFor(c) { if(!tlColorMap[c]) tlColorMap[c]=TL_COLORS[Object.keys(tlColorMap).length%TL_COLORS.length]; return tlColorMap[c]; }
-function cColorFor(c)  { if(!cColorMap[c])  cColorMap[c]=C_COLORS[Object.keys(cColorMap).length%C_COLORS.length];   return cColorMap[c]; }
-function composerBadge(c) { const col=cColorFor(c); return `<span class="badge" style="background:${col.bg};color:${col.text}">${esc(c)}</span>`; }
+// ── GITHUB API ──
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = label;
+}
 
-function load() { try { const s=localStorage.getItem(KEY); pieces=s?JSON.parse(s):BAKED.map(p=>({...p})); } catch { pieces=BAKED.map(p=>({...p})); } }
-function save() { localStorage.setItem(KEY,JSON.stringify(pieces)); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmt(d) { if(!d) return null; const[y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+async function ghLoad() {
+  setSyncStatus('syncing', 'Chargement…');
+  try {
+    const r = await fetch(GH_API + '?t=' + Date.now(), {
+      headers: { Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    fileSha = data.sha;
+    const content = JSON.parse(atob(data.content.replace(/\n/g, '')));
+    pieces = content.length ? content : BAKED.map(p=>({...p}));
+    if (!content.length && getToken()) await ghSave('Initialisation du répertoire');
+    lastSync = new Date();
+    setSyncStatus('ok', 'Synchronisé');
+    updateFooterSync();
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de chargement');
+    try { const s=localStorage.getItem('piano_rep_v3'); if(s) pieces=JSON.parse(s); else pieces=BAKED.map(p=>({...p})); } catch { pieces=BAKED.map(p=>({...p})); }
+    showToast('⚠️ Mode hors-ligne — données locales', 'var(--amber)');
+  }
+  renderCards();
+}
 
-const SL = {'en-cours':'En cours','maîtrisé':'Maîtrisé','à-revoir':'À revoir','en-pause':'En pause'};
-const LL = {'débutant':'Débutant','intermédiaire':'Intermédiaire','avancé':'Avancé'};
-const SI = {'en-cours':'🎵','maîtrisé':'✓','à-revoir':'↺','en-pause':'⏸'};
+async function ghSave(msg = 'Mise à jour du répertoire') {
+  const token = getToken();
+  if (!token) { showToast('⚠️ Token manquant — sauvegarde locale', 'var(--amber)'); localStorage.setItem('piano_rep_v3', JSON.stringify(pieces)); return; }
+  setSyncStatus('syncing', 'Sauvegarde…');
+  try {
+    const body = {
+      message: msg,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(pieces, null, 2)))),
+      committer: { name: 'Elise', email: GH_EMAIL }
+    };
+    if (fileSha) body.sha = fileSha;
+    const r = await fetch(GH_API, {
+      method: 'PUT',
+      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    fileSha = data.content.sha;
+    lastSync = new Date();
+    setSyncStatus('ok', 'Synchronisé');
+    updateFooterSync();
+    localStorage.setItem('piano_rep_v3', JSON.stringify(pieces));
+    showToast('✓ Sauvegardé', 'var(--green)');
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de sauvegarde');
+    localStorage.setItem('piano_rep_v3', JSON.stringify(pieces));
+    showToast('⚠️ Sauvegarde locale uniquement', 'var(--amber)');
+  }
+}
 
-function toggleTheme() {
-  const html=document.documentElement, isDark=html.getAttribute('data-theme')==='dark';
+function updateFooterSync() {
+  if (!lastSync) return;
+  const h = lastSync.getHours().toString().padStart(2,'0');
+  const m = lastSync.getMinutes().toString().padStart(2,'0');
+  document.getElementById('footer-last-sync').textContent = `Dernière sync ${h}:${m}`;
+}
+
+function showToast(msg, color='var(--accent)') {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeftColor = color;
+  t.style.borderLeftWidth = '3px';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// ── UTILITAIRES ──
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(d){if(!d)return null;const[y,m,day]=d.split('-');return `${day}/${m}/${y}`;}
+const SL={'en-cours':'En cours','maîtrisé':'Maîtrisé','à-revoir':'À revoir','en-pause':'En pause'};
+const LL={'débutant':'Débutant','intermédiaire':'Intermédiaire','avancé':'Avancé'};
+const SI={'en-cours':'🎵','maîtrisé':'✓','à-revoir':'↺','en-pause':'⏸'};
+
+function toggleTheme(){
+  const html=document.documentElement,isDark=html.getAttribute('data-theme')==='dark';
   html.setAttribute('data-theme',isDark?'light':'dark');
   document.getElementById('btn-theme').textContent=isDark?'🌙':'☀️';
 }
 
-function switchTab(name) {
+function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['liste','timeline'][i]===name));
-  document.getElementById('tab-liste').style.display    = name==='liste'?'block':'none';
-  document.getElementById('tab-timeline').style.display = name==='timeline'?'block':'none';
+  document.getElementById('tab-liste').style.display    =name==='liste'?'block':'none';
+  document.getElementById('tab-timeline').style.display =name==='timeline'?'block':'none';
   if(name==='timeline') renderTimeline();
 }
 
-function getFiltered() {
+function getFiltered(){
   const q=document.getElementById('searchInput').value.toLowerCase();
   const st=document.getElementById('filterStatus').value;
   const lv=document.getElementById('filterLevel').value;
@@ -324,11 +413,10 @@ function getFiltered() {
   }).sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
 }
 
-function renderCards() {
-  // reset composer color maps each render so colors are stable
+function renderCards(){
   cColorMap={};
   const data=getFiltered();
-  const tot=pieces.length, mai=pieces.filter(p=>p.status==='maîtrisé').length,
+  const tot=pieces.length,mai=pieces.filter(p=>p.status==='maîtrisé').length,
         enc=pieces.filter(p=>p.status==='en-cours').length,
         comp=new Set(pieces.map(p=>p.composer)).size;
   document.getElementById('statsBar').innerHTML=
@@ -359,16 +447,16 @@ function renderCards() {
 }
 
 document.addEventListener('click',function(e){
-  const btn=e.target.closest('[data-action]'); if(!btn) return;
+  const btn=e.target.closest('[data-action]');if(!btn)return;
   const idx=parseInt(btn.dataset.idx,10);
   if(btn.dataset.action==='edit') openModal(idx);
   if(btn.dataset.action==='del') showDeleteConfirm(idx);
-  if(btn.dataset.action==='del-confirm') { pieces.splice(pendingDeleteIdx,1); save(); pendingDeleteIdx=null; document.getElementById('delete-confirm-wrap').innerHTML=''; renderCards(); }
-  if(btn.dataset.action==='del-cancel')  { pendingDeleteIdx=null; document.getElementById('delete-confirm-wrap').innerHTML=''; }
+  if(btn.dataset.action==='del-confirm'){pieces.splice(pendingDeleteIdx,1);pendingDeleteIdx=null;document.getElementById('delete-confirm-wrap').innerHTML='';renderCards();ghSave('Suppression d\'un morceau');}
+  if(btn.dataset.action==='del-cancel'){pendingDeleteIdx=null;document.getElementById('delete-confirm-wrap').innerHTML='';}
 });
 
-function showDeleteConfirm(idx) {
-  pendingDeleteIdx=idx; const p=pieces[idx];
+function showDeleteConfirm(idx){
+  pendingDeleteIdx=idx;const p=pieces[idx];
   document.getElementById('delete-confirm-wrap').innerHTML=`
     <div class="delete-confirm">
       <span>Supprimer « ${esc(p.title)} » ?</span>
@@ -377,8 +465,8 @@ function showDeleteConfirm(idx) {
     </div>`;
 }
 
-function openModal(idx=null) {
-  editingIdx=idx; const p=idx!==null?pieces[idx]:null;
+function openModal(idx=null){
+  editingIdx=idx;const p=idx!==null?pieces[idx]:null;
   document.getElementById('modal-title').textContent=idx!==null?'Modifier le morceau':'Ajouter un morceau';
   document.getElementById('f-title').value   =p?p.title:'';
   document.getElementById('f-composer').value=p?p.composer:'';
@@ -390,66 +478,55 @@ function openModal(idx=null) {
   document.getElementById('overlay').style.display='flex';
   setTimeout(()=>document.getElementById('f-title').focus(),50);
 }
-function closeModal() { document.getElementById('overlay').style.display='none'; editingIdx=null; }
-function overlayClick(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
-function savePiece() {
+function closeModal(){document.getElementById('overlay').style.display='none';editingIdx=null;}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+function savePiece(){
   const title=document.getElementById('f-title').value.trim();
   const composer=document.getElementById('f-composer').value.trim();
   if(!title||!composer){alert('Titre et compositeur sont obligatoires.');return;}
   const d={title,composer,level:document.getElementById('f-level').value,status:document.getElementById('f-status').value,startDate:document.getElementById('f-start').value,endDate:document.getElementById('f-end').value,notes:document.getElementById('f-notes').value.trim()};
-  if(editingIdx!==null) pieces[editingIdx]={...pieces[editingIdx],...d};
+  if(editingIdx!==null)pieces[editingIdx]={...pieces[editingIdx],...d};
   else pieces.push(d);
-  save(); closeModal(); renderCards();
+  closeModal();renderCards();
+  ghSave(editingIdx!==null?'Modification d\'un morceau':'Ajout d\'un morceau');
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
-
-function exportPDF() { window.print(); }
-
-function copyData() {
-  const data=localStorage.getItem(KEY)||JSON.stringify(pieces);
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(data).then(()=>{
-      const btn=document.getElementById('btn-copy'),orig=btn.textContent;
-      btn.textContent='✓ Copié !'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)';
-      setTimeout(()=>{btn.textContent=orig;btn.style.color='';btn.style.borderColor='';},2500);
-    });
-  }
-}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function exportPDF(){window.print();}
 
 // ── TIMELINE ──
-function currentSY() { const n=new Date(); return n.getMonth()>=8?n.getFullYear():n.getFullYear()-1; }
-function syStart(sy) { return new Date(sy,8,1); }
-function syEnd(sy)   { return new Date(sy+1,7,31,23,59,59); }
-function syLabel(sy) { return `${sy} – ${sy+1}`; }
-function changeYear(d) { tlSY+=d; renderTimeline(); }
+function currentSY(){const n=new Date();return n.getMonth()>=8?n.getFullYear():n.getFullYear()-1;}
+function syStart(sy){return new Date(sy,8,1);}
+function syEnd(sy)  {return new Date(sy+1,7,31,23,59,59);}
+function syLabel(sy){return `${sy} – ${sy+1}`;}
+function changeYear(d){tlSY+=d;renderTimeline();}
 
-function renderTimeline() {
+function renderTimeline(){
   tlColorMap={};
-  const start=syStart(tlSY), end=syEnd(tlSY), total=end-start, now=new Date();
+  const start=syStart(tlSY),end=syEnd(tlSY),total=end-start,now=new Date();
   const sySorted=pieces.filter(p=>p.startDate).map(p=>{const d=new Date(p.startDate);return d.getMonth()>=8?d.getFullYear():d.getFullYear()-1;});
-  const minSY=sySorted.length?Math.min(...sySorted):tlSY, maxSY=currentSY();
+  const minSY=sySorted.length?Math.min(...sySorted):tlSY,maxSY=currentSY();
   document.getElementById('yr-label').textContent=syLabel(tlSY);
   document.getElementById('btn-prev').disabled=tlSY<=minSY;
   document.getElementById('btn-next').disabled=tlSY>=maxSY;
   document.getElementById('tl-legend').innerHTML=[...new Set(pieces.map(p=>p.composer))].map(c=>`<span class="leg-item"><span class="leg-dot" style="background:${tlColorFor(c)}"></span>${esc(c)}</span>`).join('');
   const active=pieces.map((p,i)=>({...p,_i:i})).filter(p=>{
-    if(!p.startDate) return false;
-    const s=new Date(p.startDate), e=p.endDate?new Date(p.endDate):now;
+    if(!p.startDate)return false;
+    const s=new Date(p.startDate),e=p.endDate?new Date(p.endDate):now;
     return s<=end&&e>=start;
   }).sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
   const grid=document.getElementById('tl-grid');
   if(!active.length){grid.innerHTML=`<div class="tl-empty">Aucun morceau sur cette période</div>`;return;}
-  const isCur=tlSY===currentSY(), nowPct=isCur?((now-start)/total*100).toFixed(2):null;
+  const isCur=tlSY===currentSY(),nowPct=isCur?((now-start)/total*100).toFixed(2):null;
   const mNames=['Sep','Oct','Nov','Déc','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû'];
   const mHeader=`<div class="tl-month-row">${mNames.map((m,i)=>{
     const mi=(8+i)%12,my=mi>=8?tlSY:tlSY+1,cur=isCur&&mi===now.getMonth()&&my===now.getFullYear();
     return `<div class="tl-m${cur?' now':''}">${m}</div>`;
   }).join('')}</div>`;
   const rows=active.map(p=>{
-    const s=new Date(p.startDate), e=p.endDate?new Date(p.endDate):now;
-    const cs=Math.max(s,start), ce=Math.min(e,end);
-    const left=((cs-start)/total*100).toFixed(2), wid=Math.max(0.5,((ce-cs)/total*100)).toFixed(2);
-    const col=tlColorFor(p.composer), todayLine=nowPct?`<div class="tl-now-line" style="left:${nowPct}%"></div>`:'';
+    const s=new Date(p.startDate),e=p.endDate?new Date(p.endDate):now;
+    const cs=Math.max(s,start),ce=Math.min(e,end);
+    const left=((cs-start)/total*100).toFixed(2),wid=Math.max(0.5,((ce-cs)/total*100)).toFixed(2);
+    const col=tlColorFor(p.composer),todayLine=nowPct?`<div class="tl-now-line" style="left:${nowPct}%"></div>`:'';
     return `<div class="tl-row">
       <div class="tl-lbl"><span class="tl-lbl-title">${esc(p.title.length>28?p.title.slice(0,26)+'…':p.title)}</span><span class="tl-lbl-composer">${esc(p.composer)}</span></div>
       <div class="tl-bar-area">${todayLine}
@@ -461,15 +538,20 @@ function renderTimeline() {
   grid.innerHTML=mHeader+rows;
 }
 
-function showTip(e,idx) {
-  const p=pieces[idx]; if(!p) return;
+function showTip(e,idx){
+  const p=pieces[idx];if(!p)return;
   document.getElementById('tooltip').innerHTML=`<strong>${esc(p.title)}</strong><em>${esc(p.composer)}</em><br>${fmt(p.startDate)||'?'} → ${p.endDate?fmt(p.endDate):'En cours'}${p.notes?`<br><span style="font-size:11px;color:var(--text2)">${esc(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</span>`:''}`;
-  document.getElementById('tooltip').style.display='block'; moveTip(e);
+  document.getElementById('tooltip').style.display='block';moveTip(e);
 }
-function moveTip(e) { const t=document.getElementById('tooltip'); t.style.left=(e.clientX+14)+'px'; t.style.top=(e.clientY-8)+'px'; }
-function hideTip()  { document.getElementById('tooltip').style.display='none'; }
+function moveTip(e){const t=document.getElementById('tooltip');t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-8)+'px';}
+function hideTip(){document.getElementById('tooltip').style.display='none';}
 
-load(); renderCards();
+// ── INIT ──
+if (!getToken()) {
+  const t = prompt('Entre ton token GitHub pour activer la synchronisation :');
+  if (t && t.trim()) setToken(t.trim());
+}
+ghLoad();
 </script>
 </body>
 </html>

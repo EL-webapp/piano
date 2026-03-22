@@ -284,7 +284,16 @@ var GH_REPO  = 'piano';
 var GH_FILE  = 'data.json';
 var GH_EMAIL = 'eliselamic@hotmail.com';
 var GH_API   = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_FILE;
-function getToken() { return localStorage.getItem('gh_token'); }
+function toBase64(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+    return String.fromCharCode('0x' + p1);
+  }));
+}
+function fromBase64(str) {
+  return decodeURIComponent(atob(str).split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+}
 function setToken(t) { localStorage.setItem('gh_token', t); }
 
 var pieces = [], fileSha = null, editingIdx = null, pendingDeleteIdx = null, lastSync = null;
@@ -389,7 +398,7 @@ async function ghLoad() {
     if(!r.ok) throw new Error('HTTP '+r.status);
     var data=await r.json();
     fileSha=data.sha;
-    var content=JSON.parse(atob(data.content.replace(/\n/g,'')));
+    var content=JSON.parse(fromBase64(data.content.replace(/\n/g,'')));
     pieces=content.length?content:BAKED.map(function(p){return Object.assign({},p);});
     if(!content.length && getToken()) await ghSave('Initialisation');
     lastSync=new Date();
@@ -410,7 +419,7 @@ async function ghSave(msg) {
   if(!token) { localStorage.setItem('piano_rep_v3',JSON.stringify(pieces)); showToast('\u26a0\ufe0f Sauvegarde locale','var(--amber)'); return; }
   setSyncStatus('syncing','Sauvegarde\u2026');
   try {
-    var body={message:msg, content:btoa(unescape(encodeURIComponent(JSON.stringify(pieces,null,2)))), committer:{name:'Elise',email:GH_EMAIL}};
+    var body={message:msg, content:toBase64(JSON.stringify(pieces,null,2)), committer:{name:'Elise',email:GH_EMAIL}};
     if(fileSha) body.sha=fileSha;
     var r=await fetch(GH_API,{method:'PUT',headers:{Authorization:'token '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok) throw new Error('HTTP '+r.status);

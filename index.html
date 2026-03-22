@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Repertoire Piano - Elise</title>
+<title>Répertoire Piano - Elise</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
   --bg:#f7f5f2;--surface:#fff;--surface2:#f0ede8;--border:#e8e3dc;
@@ -177,7 +178,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 </style>
 </head>
 <body>
-<div class="header">
+<div class="header" id="app-header">
   <div>
     <div class="eyebrow">Journal de pratique</div>
     <div class="htitle">Mon <span>Répertoire</span></div>
@@ -185,8 +186,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   </div>
   <div class="hright">
     <div class="sync-status"><span class="sdot" id="sdot"></span><span id="slbl">Chargement...</span></div>
-    <button class="btn-s btn-auth" id="btn-auth" onclick="toggleAuth()">&#128275; Connexion</button>
-    <button class="btn-theme" onclick="toggleTheme()" id="btn-theme">&#127769;</button>
+    <button class="btn-s btn-auth" id="btn-auth" onclick="toggleAuth()">🔓 Connexion</button>
+    <button class="btn-theme" onclick="toggleTheme()" id="btn-theme">🌙</button>
   </div>
 </div>
 <div class="stats" id="statsBar"></div>
@@ -197,7 +198,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div id="tab-liste">
   <div class="controls">
     <div class="search-wrap">
-      <span class="si">&#9833;</span>
+      <span class="si">♩</span>
       <input type="text" id="searchInput" placeholder="Rechercher..." oninput="renderCards()">
     </div>
     <select class="fsel" id="fStatus" onchange="renderCards()">
@@ -214,7 +215,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <option value="avance">Avancé</option>
     </select>
     <button class="btn-p" id="btn-add" onclick="openModal()">+ Ajouter</button>
-    <button class="btn-s" onclick="exportPDF()">&#8615; Export PDF</button>
+    <button class="btn-s" id="btn-export" onclick="exportPDF()">⬇ Export PDF</button>
   </div>
   <div id="del-wrap"></div>
   <div class="cards" id="cardsWrap"></div>
@@ -223,9 +224,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div id="tab-timeline" style="display:none">
   <div class="tl-ctrl">
     <div class="yn">
-      <button class="btn-yr" id="btn-prev" onclick="changeYear(-1)">&#8249;</button>
+      <button class="btn-yr" id="btn-prev" onclick="changeYear(-1)">‹</button>
       <span class="yr-lbl" id="yr-lbl"></span>
-      <button class="btn-yr" id="btn-next" onclick="changeYear(1)">&#8250;</button>
+      <button class="btn-yr" id="btn-next" onclick="changeYear(1)">›</button>
     </div>
     <div class="tl-leg" id="tl-leg"></div>
   </div>
@@ -238,8 +239,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <div class="video-header">
     <span class="video-title" id="video-viewer-title"></span>
     <div style="display:flex;gap:10px;align-items:center;">
-      <button class="btn-s" id="btn-score-over" style="font-size:11px;padding:6px 12px;display:none" onclick="toggleScoreOver()">&#128196; Voir partition</button>
-      <button class="btn-x" onclick="closeVideo()" style="font-size:22px;">&#x2715;</button>
+      <button class="btn-s" id="btn-score-over" style="font-size:11px;padding:6px 12px;display:none" onclick="toggleScoreOver()">📄 Voir partition</button>
+      <button class="btn-x" onclick="closeVideo()" style="font-size:22px;">✕</button>
     </div>
   </div>
   <div class="video-wrap">
@@ -247,12 +248,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   </div>
   <div id="score-over" style="display:none;position:absolute;inset:56px 0 0 0;background:var(--surface);z-index:10;flex-direction:column;">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);">
-      <span style="font-size:12px;color:var(--text2);font-style:italic;">&#127925; Audio en cours - feuilletez la partition</span>
+      <span style="font-size:12px;color:var(--text2);font-style:italic;">🎵 Audio en cours - feuilletez la partition</span>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">&#8592; Prec.</button>
+        <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">← Préc.</button>
         <span id="pdf-page-info2" style="font-size:12px;color:var(--text2);min-width:80px;text-align:center;"></span>
-        <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. &#8594;</button>
-        <button onclick="toggleScoreOver()" class="btn-x" style="font-size:18px;">&#x2715;</button>
+        <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. →</button>
+        <button onclick="toggleScoreOver()" class="btn-x" style="font-size:18px;">✕</button>
       </div>
     </div>
     <div style="flex:1;overflow:auto;background:#525659;display:flex;justify-content:center;padding:16px;">
@@ -266,16 +267,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <div class="pdf-header">
     <span class="pdf-title" id="pdf-viewer-title"></span>
     <div style="display:flex;gap:10px;align-items:center;">
-      <a id="pdf-dl-link" href="#" target="_blank" class="btn-s" style="font-size:11px;padding:6px 12px;">&#8615; Telecharger</a>
-      <button class="btn-x" onclick="closePDF()" style="font-size:22px;">&#x2715;</button>
+      <a id="pdf-dl-link" href="#" target="_blank" class="btn-s" style="font-size:11px;padding:6px 12px;">⬇ Télécharger</a>
+      <button class="btn-x" onclick="closePDF()" style="font-size:22px;">✕</button>
     </div>
   </div>
   <div style="flex:1;overflow:auto;background:#525659;" id="pdf-canvas-wrap">
     <canvas id="pdf-canvas" style="display:block;margin:0 auto;max-width:100%;"></canvas>
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:#3a3a3a;position:sticky;bottom:0;">
-      <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">&#8592; Prec.</button>
+      <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">← Préc.</button>
       <span id="pdf-page-info" style="font-size:12px;color:#ccc;min-width:80px;text-align:center;"></span>
-      <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. &#8594;</button>
+      <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. →</button>
     </div>
   </div>
 </div>
@@ -285,7 +286,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <div class="modal">
     <div class="modal-hd">
       <h2 id="modal-title">Ajouter un morceau</h2>
-      <button class="btn-x" onclick="closeModal()">&#x2715;</button>
+      <button class="btn-x" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
       <div class="fg">
@@ -306,15 +307,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
             <option value="en-pause">En pause</option>
           </select>
         </div>
-        <div class="field"><label>Date de debut</label><input type="date" id="f-start"></div>
+        <div class="field"><label>Date de début</label><input type="date" id="f-start"></div>
         <div class="field"><label>Date de fin</label><input type="date" id="f-end"></div>
         <div class="field full"><label>Notes</label><textarea id="f-notes" placeholder="Tempo, conseils..."></textarea></div>
-        <div class="field full"><label>Lien video YouTube</label><input type="url" id="f-video" placeholder="https://www.youtube.com/watch?v=..."></div>
+        <div class="field full"><label>Lien vidéo YouTube</label><input type="url" id="f-video" placeholder="https://www.youtube.com/watch?v=..."></div>
         <div class="field full">
           <label>Partition (PDF)</label>
           <div class="pdf-upload-zone">
             <input type="file" id="f-pdf" accept=".pdf" onchange="onPdfSelect(event)">
-            <div class="pdf-upload-label">&#128196; Glisse un PDF ici ou clique pour choisir</div>
+            <div class="pdf-upload-label">📄 Glisse un PDF ici ou clique pour choisir</div>
             <div class="pdf-upload-name" id="pdf-name"></div>
           </div>
         </div>
@@ -333,12 +334,8 @@ var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/';
 function getToken(){return localStorage.getItem('gh_token');}
 function setToken(t){localStorage.setItem('gh_token',t);}
 
-function b64enc(str){
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,function(_,p){return String.fromCharCode(parseInt(p,16));}));
-}
-function b64dec(str){
-  return decodeURIComponent(atob(str).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''));
-}
+function b64enc(str){return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,function(_,p){return String.fromCharCode(parseInt(p,16));}));}
+function b64dec(str){return decodeURIComponent(atob(str).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''));}
 
 var pieces=[],fileSha=null,editIdx=null,delIdx=null,lastSync=null,tlSY=curSY();
 var pendingPdfFile=null,pendingPdfB64=null,currentVideoIdx=null;
@@ -353,7 +350,7 @@ function cbadge(c){var col=cC(c);return '<span class="badge" style="background:'
 
 var SL={'en-cours':'En cours','maitrise':'Maîtrisé','a-revoir':'À revoir','en-pause':'En pause'};
 var LL={'debutant':'Débutant','intermediaire':'Intermédiaire','avance':'Avancé'};
-var SI={'en-cours':'&#127925;','maitrise':'&#128170;','a-revoir':'&#8634;','en-pause':'&#9208;'};
+var SI={'en-cours':'🎵','maitrise':'👏🏻','a-revoir':'↺','en-pause':'⏸'};
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmt(d){if(!d)return null;var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
@@ -364,12 +361,12 @@ function updFooter(){if(!lastSync)return;var h=lastSync.getHours().toString().pa
 function isRO(){return !getToken();}
 function updAuthBtn(){
   var btn=document.getElementById('btn-auth');
-  if(getToken()){btn.textContent='\uD83D\uDD12 Ecriture';btn.style.color='var(--green)';btn.style.borderColor='var(--green)';}
-  else{btn.textContent='\uD83D\uDD13 Connexion';btn.style.color='';btn.style.borderColor='';}
+  if(getToken()){btn.textContent='🔒 Écriture';btn.style.color='var(--green)';btn.style.borderColor='var(--green)';}
+  else{btn.textContent='🔓 Connexion';btn.style.color='';btn.style.borderColor='';}
 }
 function updRO(){updAuthBtn();var ba=document.getElementById('btn-add');ba.disabled=isRO();ba.title=isRO()?'Mode lecture seule':'';}
 function toggleAuth(){
-  if(getToken()){if(confirm('Se deconnecter ?')){localStorage.removeItem('gh_token');location.reload();}}
+  if(getToken()){if(confirm('Se déconnecter ?')){localStorage.removeItem('gh_token');location.reload();}}
   else{var t=prompt('Token GitHub :');if(t&&t.trim()){setToken(t.trim());location.reload();}}
 }
 
@@ -392,7 +389,7 @@ async function ghLoad(){
     var content=JSON.parse(b64dec(d.content.replace(/\n/g,'')));
     pieces=content.length?content:[];
     lastSync=new Date();
-    setSS('ok',isRO()?'Lecture seule':'Synchronise');
+    setSS('ok',isRO()?'Lecture seule':'Synchronisé');
     updFooter();
   }catch(e){
     setSS('error','Erreur');
@@ -407,7 +404,7 @@ async function ghSave(msg){
   setSS('syncing','Sauvegarde...');
   try{
     var d=await ghPut(GH_FILE,b64enc(JSON.stringify(pieces,null,2)),fileSha,msg||'MAJ');
-    fileSha=d.content.sha;lastSync=new Date();setSS('ok','Synchronise');updFooter();
+    fileSha=d.content.sha;lastSync=new Date();setSS('ok','Synchronisé');updFooter();
     localStorage.setItem('piano_v4',JSON.stringify(pieces));
     toast('Sauvegarde OK','var(--green)');
   }catch(e){
@@ -422,7 +419,7 @@ async function ghUploadPDF(filename,b64content){
     var sha=null;
     try{var existing=await ghGet('partitions/'+filename);sha=existing.sha;}catch(e){}
     await ghPut('partitions/'+filename,b64content,sha,'Partition: '+filename);
-    toast('PDF uploade','var(--green)');return true;
+    toast('PDF uploadé','var(--green)');return true;
   }catch(e){toast('Erreur upload PDF','var(--red)');return false;}
 }
 
@@ -534,10 +531,10 @@ function toggleScoreOver(){
   var visible=so.style.display==='flex';
   if(visible){
     so.style.display='none';
-          document.getElementById('btn-score-over').textContent='📄 Voir partition';
+    document.getElementById('btn-score-over').textContent='📄 Voir partition';
   }else{
     so.style.display='flex';so.style.flexDirection='column';
-          document.getElementById('btn-score-over').textContent='📄 Masquer partition';
+    document.getElementById('btn-score-over').textContent='📄 Masquer partition';
     if(currentVideoIdx!==null){
       var p=pieces[currentVideoIdx];
       loadPdfJs(function(){
@@ -559,7 +556,7 @@ function closeVideo(){
 function toggleTheme(){
   var h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
   h.setAttribute('data-theme',d?'light':'dark');
-  document.getElementById('btn-theme').textContent=d?'\uD83C\uDF19':'\u2600\uFE0F';
+  document.getElementById('btn-theme').textContent=d?'🌙':'☀️';
 }
 function switchTab(n){
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',['liste','timeline'][i]===n);});
@@ -582,29 +579,29 @@ function renderCards(){
       enc=pieces.filter(function(p){return p.status==='en-cours';}).length,
       comp=new Set(pieces.map(function(p){return p.composer;})).size;
   document.getElementById('statsBar').innerHTML=
-    [[tot,'&#127929;','Morceaux','si-p'],[mai,'&#128079;&#127995;','Maîtrisés','si-g'],[enc,'&#127925;','En cours','si-a'],[comp,'&#9997;&#127995;','Compositeurs','si-r']]
+    [[tot,'🎹','Morceaux','si-p'],[mai,'👏🏻','Maîtrisés','si-g'],[enc,'🎵','En cours','si-a'],[comp,'✍🏻','Compositeurs','si-r']]
     .map(function(x){return '<div class="stat"><div class="stat-icon '+x[3]+'">'+x[1]+'</div><div class="stat-text"><span class="stat-num">'+x[0]+'</span><span class="stat-label">'+x[2]+'</span></div></div>';}).join('');
   document.getElementById('fcount').textContent=data.length+' / '+tot+' morceaux';
   var wrap=document.getElementById('cardsWrap');
-  if(!data.length){wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:16px">&#119997;</div>Aucun morceau trouve</div>';return;}
+  if(!data.length){wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:16px">𝄽</div>Aucun morceau trouvé</div>';return;}
   var ro=isRO();
   wrap.innerHTML=data.map(function(p,i){
     var hasPdf=!!p.pdfFile,hasVideo=!!p.videoUrl;
     var footer='';
-    if(hasPdf)footer+='<button class="btn-pdf" onclick="openPDF('+p._i+')">&#128196; Partition</button>';
-    else if(!ro)footer+='<label class="btn-upload" style="cursor:pointer;"><input type="file" accept=".pdf" style="display:none" onchange="quickUploadPDF(event,'+p._i+')">&#128196; Ajouter partition</label>';
-    if(hasVideo)footer+='<button class="btn-pdf" style="color:var(--red)" onclick="openVideo('+p._i+')">&#9654; Video</button>';
+    if(hasPdf)footer+='<button class="btn-pdf" onclick="openPDF('+p._i+')">📄 Partition</button>';
+    else if(!ro)footer+='<label class="btn-upload" style="cursor:pointer;"><input type="file" accept=".pdf" style="display:none" onchange="quickUploadPDF(event,'+p._i+')">📄 Ajouter partition</label>';
+    if(hasVideo)footer+='<button class="btn-pdf" style="color:var(--red)" onclick="openVideo('+p._i+')">▶ Vidéo</button>';
     return '<div class="card" style="animation-delay:'+i*30+'ms">'
       +'<div class="card-top"><div class="badges">'
       +'<span class="badge b-'+p.status+'">'+SI[p.status]+' '+SL[p.status]+'</span>'
       +'<span class="badge b-'+p.level+'">'+LL[p.level]+'</span>'
       +'</div><div class="card-acts"'+(ro?' style="display:none"':'')+'>'
-      +'<button class="ca" data-action="edit" data-idx="'+p._i+'">&#9999;&#65039;</button>'
-      +'<button class="ca del" data-action="del" data-idx="'+p._i+'">&#128465;</button>'
+      +'<button class="ca" data-action="edit" data-idx="'+p._i+'">✏️</button>'
+      +'<button class="ca del" data-action="del" data-idx="'+p._i+'">🗑</button>'
       +'</div></div>'
       +'<div class="card-title">'+esc(p.title)+'</div>'
       +'<div class="card-composer">'+cbadge(p.composer)+'</div>'
-      +'<div class="card-meta">'+(p.startDate?'<span>&#128197; '+fmt(p.startDate)+(p.endDate?' &rarr; '+fmt(p.endDate):' &rarr; en cours')+'</span>':'')+'</div>'
+      +'<div class="card-meta">'+(p.startDate?'<span>📅 '+fmt(p.startDate)+(p.endDate?' → '+fmt(p.endDate):' → en cours')+'</span>':'')+'</div>'
       +(p.notes?'<div class="card-notes"><span class="ndot"></span>'+esc(p.notes)+'</div>':'')
       +(footer?'<div class="card-footer">'+footer+'</div>':'')
       +'</div>';
@@ -685,166 +682,167 @@ async function quickUploadPDF(e,idx){
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closePDF();closeVideo();}});
 
+// ── EXPORT PDF ──
 function exportPDF(){
-  if(!window.jspdf){toast('jsPDF non charge, reessaie','var(--amber)');return;}
-  var jsPDF=window.jspdf.jsPDF;
-  var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  var margin=14,pageW=297,pageH=210;
-  var colW=[100,52,32,32,52];
+  if(!window.jspdf||!window.html2canvas){toast('Librairies non chargées, réessaie','var(--amber)');return;}
+  var btn=document.getElementById('btn-export');
+  btn.textContent='⏳ Génération...';btn.disabled=true;
 
-  function safe(str){
-    return String(str||'').replace(/[^\x20-\x7E]/g,function(c){
-      var map={'\xe9':'e','\xe8':'e','\xea':'e','\xeb':'e','\xe0':'a','\xe2':'a','\xe4':'a','\xee':'i','\xef':'i','\xf4':'o','\xf6':'o','\xf9':'u','\xfb':'u','\xfc':'u','\xe7':'c','\xc9':'E','\xc8':'E','\xc0':'A','\xc2':'A','\xce':'I','\xd4':'O','\xd9':'U','\xdb':'U','\xc7':'C','\u2013':'-','\u2014':'-','\u2026':'...','\xab':'','\xbb':'','\xa0':' ','\u2019':"'"};
-      return map[c]!==undefined?map[c]:'';
-    });
-  }
-  function ph(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+  // Capture header + stats
+  var headerEl=document.getElementById('app-header');
+  var statsEl=document.getElementById('statsBar');
+  var wrapper=document.createElement('div');
+  wrapper.style.cssText='position:fixed;top:-9999px;left:0;width:'+document.body.clientWidth+'px;background:var(--surface);';
+  wrapper.appendChild(headerEl.cloneNode(true));
+  wrapper.appendChild(statsEl.cloneNode(true));
+  document.body.appendChild(wrapper);
 
-  var tot=pieces.length;
-  var mai=pieces.filter(function(p){return p.status==='maitrise';}).length;
-  var enc=pieces.filter(function(p){return p.status==='en-cours';}).length;
-  var comp=new Set(pieces.map(function(p){return p.composer;})).size;
-  var d=new Date();
-  var dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-  var sl={'en-cours':'En cours','maitrise':'Maitrise','a-revoir':'A revoir','en-pause':'En pause'};
-  var ll={'debutant':'Debutant','intermediaire':'Intermediaire','avance':'Avance'};
+  html2canvas(wrapper,{scale:2,useCORS:true,logging:false}).then(function(canvas){
+    document.body.removeChild(wrapper);
+    var imgData=canvas.toDataURL('image/png');
+    var jsPDF=window.jspdf.jsPDF;
+    var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    var margin=14,pageW=297,pageH=210;
+    var colW=[100,52,32,32,52];
+    var headers=['Titre','Compositeur','Statut','Niveau','Dates'];
 
-  function drawHeader(){
-    doc.setFillColor(247,245,242);
-    doc.rect(0,0,pageW,28,'F');
-    doc.setDrawColor(232,227,220);doc.setLineWidth(0.4);
-    doc.line(0,28,pageW,28);
-    doc.setFont('helvetica','bolditalic');
-    doc.setFontSize(20);doc.setTextColor(30,58,110);
-    doc.text('Mon Repertoire',margin,13);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(122,112,104);
-    doc.text('Elise et Camille G. - '+dateStr,margin,20);
-    var stats=[[tot,'Morceaux','#fcecea'],[mai,'Maitrises','#e6f4ed'],[enc,'En cours','#fdf3df'],[comp,'Compositeurs','#e0e8f5']];
-    var sx=pageW-margin-(38*4+5*3);
-    stats.forEach(function(st){
-      var rgb=ph(st[2]);
-      doc.setFillColor(rgb[0],rgb[1],rgb[2]);
-      doc.roundedRect(sx,4,36,20,2,2,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(42,37,32);
-      var nw=doc.getTextWidth(String(st[0]));
-      doc.text(String(st[0]),sx+18-nw/2,14);
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,96,92);
-      var lw=doc.getTextWidth(st[1]);
-      doc.text(st[1],sx+18-lw/2,20);
-      sx+=41;
-    });
-    // Pied de page
-    doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(180,170,160);
-    var footerTxt='Export PDF du '+dateStr;
-    var fw=doc.getTextWidth(footerTxt);
-    doc.text(footerTxt,pageW-margin-fw,pageH-4);
-    doc.setDrawColor(220,215,210);doc.setLineWidth(0.2);
-    doc.line(margin,pageH-8,pageW-margin,pageH-8);
-    return 34;
-  }
-
-  var headers=['Titre','Compositeur','Statut','Niveau','Dates'];
-  function drawTH(y){
-    doc.setFillColor(240,237,232);
-    doc.rect(margin,y,pageW-margin*2,7,'F');
-    doc.setDrawColor(30,58,110);doc.setLineWidth(0.5);
-    doc.line(margin,y,pageW-margin,y);
-    doc.setTextColor(30,58,110);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    var x=margin;
-    headers.forEach(function(h,i){doc.text(h,x+2,y+4.8);x+=colW[i];});
-    doc.line(margin,y+7,pageW-margin,y+7);
-    doc.setLineWidth(0.2);
-    return y+7;
-  }
-
-  var y=drawHeader();
-  y=drawTH(y);
-
-  pieces.forEach(function(p,idx){
-    var rowH=7;
-    if(y+rowH>pageH-14){doc.addPage();y=drawHeader();y=drawTH(y);}
-    if(idx%2===0){doc.setFillColor(249,248,246);doc.rect(margin,y,pageW-margin*2,rowH,'F');}
-    doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');doc.setFontSize(8);
-    var x=margin;
-    var dateStr2=p.startDate?fmt(p.startDate)+(p.endDate?' > '+fmt(p.endDate):''):'';
-    var cells=[safe(p.title),safe(p.composer),sl[p.status]||p.status,ll[p.level]||p.level,dateStr2];
-    cells.forEach(function(cell,i){
-      var lines=doc.splitTextToSize(String(cell||''),colW[i]-3);
-      doc.text(lines,x+2,y+4.5);x+=colW[i];
-    });
-    doc.setDrawColor(220,215,210);
-    doc.line(margin,y+rowH,pageW-margin,y+rowH);
-    y+=rowH;
-  });
-
-  var tlColors=['#a8c4e0','#f0b8a8','#a8d4b8','#f0d8a0','#d4b0cc','#a8d8d4','#f0c8a0','#b8d0a8','#c8b8e0','#f0b8c8'];
-  var composerList=[...new Set(pieces.map(function(p){return p.composer;}))];
-  var cmap={};composerList.forEach(function(c,i){cmap[c]=tlColors[i%tlColors.length];});
-  var sySorted=pieces.filter(function(p){return p.startDate;}).map(function(p){
-    var dd=new Date(p.startDate);return dd.getMonth()>=8?dd.getFullYear():dd.getFullYear()-1;
-  });
-  if(sySorted.length){
-    var minSY=Math.min.apply(null,sySorted),maxSY=curSY(),now=new Date();
-    var MN=['Sep','Oct','Nov','Dec','Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou'];
-    for(var sy=minSY;sy<=maxSY;sy++){
-      doc.addPage();
-      var y=drawHeader();
-      var start=new Date(sy,8,1),end=new Date(sy+1,7,31,23,59,59),total=end-start;
-      doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(30,58,110);
-      doc.text('Timeline '+sy+' - '+(sy+1),margin,y+7);y+=14;
-      var lblW=90,barX=margin+lblW,barW=pageW-margin*2-lblW;
-      doc.setFontSize(7);doc.setFont('helvetica','normal');
-      var isCur=sy===curSY();
-      MN.forEach(function(m,i){
-        var mi=(8+i)%12,my=mi>=8?sy:sy+1,cur=isCur&&mi===now.getMonth()&&my===now.getFullYear();
-        doc.setTextColor(cur?30:140,cur?58:132,cur?110:124);
-        var mw=doc.getTextWidth(m);
-        doc.text(m,barX+i*(barW/12)+(barW/24)-mw/2,y);
-      });
-      doc.setDrawColor(220,215,210);doc.setLineWidth(0.2);
-      doc.line(barX,y+1,barX+barW,y+1);y+=6;
-      var nowX=isCur?barX+((now-start)/total)*barW:null;
-      var active=pieces.filter(function(p){
-        if(!p.startDate)return false;
-        var ps=new Date(p.startDate),pe=p.endDate?new Date(p.endDate):now;
-        return ps<=end&&pe>=start;
-      }).sort(function(a,b){return(a.startDate||'').localeCompare(b.startDate||'');});
-      if(!active.length){
-        doc.setFontSize(9);doc.setTextColor(160,160,160);doc.text('Aucun morceau',margin,y+8);
-      } else {
-        active.forEach(function(p){
-          if(y>pageH-22)return;
-          var ps=new Date(p.startDate),pe=p.endDate?new Date(p.endDate):now;
-          var cs=Math.max(ps,start),ce=Math.min(pe,end);
-          var left=((cs-start)/total)*barW,wid=Math.max(2,((ce-cs)/total)*barW);
-          var rgb=ph(cmap[p.composer]||'#a8c4e0');
-          doc.setFontSize(7.5);doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');
-          var title=safe(p.title.length>46?p.title.slice(0,44)+'...':p.title);
-          doc.text(title,margin,y+4);
-          doc.setFillColor(rgb[0],rgb[1],rgb[2]);
-          doc.roundedRect(barX+left,y,wid,5,1,1,'F');
-          if(nowX){doc.setDrawColor(30,58,110);doc.setLineWidth(0.5);doc.line(nowX,y-1,nowX,y+6);doc.setLineWidth(0.2);}
-          y+=8;
-        });
-      }
-      y+=4;
-      doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(100,96,92);
-      doc.text('Compositeurs :',margin,y);y+=5;
-      var lx=margin;
-      composerList.forEach(function(c){
-        var rgb=ph(cmap[c]||'#a8c4e0');
-        doc.setFillColor(rgb[0],rgb[1],rgb[2]);
-        doc.roundedRect(lx,y-3,3,3,0.5,0.5,'F');
-        doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');doc.setFontSize(7);
-        var cs=safe(c);
-        doc.text(cs,lx+5,y);
-        lx+=doc.getTextWidth(cs)+12;
-        if(lx>pageW-margin-30){lx=margin;y+=5;}
+    function safe(str){
+      return String(str||'').replace(/[^\x20-\x7E]/g,function(c){
+        var map={'\xe9':'e','\xe8':'e','\xea':'e','\xeb':'e','\xe0':'a','\xe2':'a','\xe4':'a','\xee':'i','\xef':'i','\xf4':'o','\xf6':'o','\xf9':'u','\xfb':'u','\xfc':'u','\xe7':'c','\xc9':'E','\xc8':'E','\xc0':'A','\xc2':'A','\xce':'I','\xd4':'O','\xd9':'U','\xdb':'U','\xc7':'C','\u2013':'-','\u2014':'-','\u2026':'...','\xa0':' ','\u2019':"'"};
+        return map[c]!==undefined?map[c]:'';
       });
     }
-  }
-  doc.save('repertoire-piano.pdf');
-  toast('PDF telecharge !','var(--green)');
+    function ph(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
+    var d=new Date();
+    var dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+    var sl={'en-cours':'En cours','maitrise':'Maitrise','a-revoir':'A revoir','en-pause':'En pause'};
+    var ll={'debutant':'Debutant','intermediaire':'Intermediaire','avance':'Avance'};
+
+    var imgW=pageW;
+    var imgH=Math.min((canvas.height/canvas.width)*imgW,42);
+
+    function drawHeader(){
+      doc.addImage(imgData,'PNG',0,0,imgW,imgH);
+      doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(180,170,160);
+      var footerTxt='Export PDF du '+dateStr;
+      var fw=doc.getTextWidth(footerTxt);
+      doc.text(footerTxt,pageW-margin-fw,pageH-4);
+      doc.setDrawColor(220,215,210);doc.setLineWidth(0.2);
+      doc.line(margin,pageH-8,pageW-margin,pageH-8);
+      return imgH+4;
+    }
+
+    function drawTH(y){
+      doc.setFillColor(240,237,232);
+      doc.rect(margin,y,pageW-margin*2,7,'F');
+      doc.setDrawColor(30,58,110);doc.setLineWidth(0.5);
+      doc.line(margin,y,pageW-margin,y);
+      doc.setTextColor(30,58,110);doc.setFontSize(8);doc.setFont('helvetica','bold');
+      var x=margin;
+      headers.forEach(function(h,i){doc.text(h,x+2,y+4.8);x+=colW[i];});
+      doc.line(margin,y+7,pageW-margin,y+7);
+      doc.setLineWidth(0.2);
+      return y+7;
+    }
+
+    var y=drawHeader();
+    y=drawTH(y);
+
+    pieces.forEach(function(p,idx){
+      var rowH=7;
+      if(y+rowH>pageH-14){doc.addPage();y=drawHeader();y=drawTH(y);}
+      if(idx%2===0){doc.setFillColor(249,248,246);doc.rect(margin,y,pageW-margin*2,rowH,'F');}
+      doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');doc.setFontSize(8);
+      var x=margin;
+      var dateStr2=p.startDate?fmt(p.startDate)+(p.endDate?' > '+fmt(p.endDate):''):'';
+      var cells=[safe(p.title),safe(p.composer),sl[p.status]||p.status,ll[p.level]||p.level,dateStr2];
+      cells.forEach(function(cell,i){
+        var lines=doc.splitTextToSize(String(cell||''),colW[i]-3);
+        doc.text(lines,x+2,y+4.5);x+=colW[i];
+      });
+      doc.setDrawColor(220,215,210);
+      doc.line(margin,y+rowH,pageW-margin,y+rowH);
+      y+=rowH;
+    });
+
+    // Timelines
+    var tlColors=['#a8c4e0','#f0b8a8','#a8d4b8','#f0d8a0','#d4b0cc','#a8d8d4','#f0c8a0','#b8d0a8','#c8b8e0','#f0b8c8'];
+    var composerList=[...new Set(pieces.map(function(p){return p.composer;}))];
+    var cmap={};composerList.forEach(function(c,i){cmap[c]=tlColors[i%tlColors.length];});
+    var sySorted=pieces.filter(function(p){return p.startDate;}).map(function(p){
+      var dd=new Date(p.startDate);return dd.getMonth()>=8?dd.getFullYear():dd.getFullYear()-1;
+    });
+    if(sySorted.length){
+      var minSY=Math.min.apply(null,sySorted),maxSY=curSY(),now=new Date();
+      var MN=['Sep','Oct','Nov','Dec','Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou'];
+      for(var sy=minSY;sy<=maxSY;sy++){
+        doc.addPage();
+        var y=drawHeader();
+        var start=new Date(sy,8,1),end=new Date(sy+1,7,31,23,59,59),total=end-start;
+        doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(30,58,110);
+        doc.text('Timeline '+sy+' - '+(sy+1),margin,y+7);y+=14;
+        var lblW=90,barX=margin+lblW,barW=pageW-margin*2-lblW;
+        var isCur=sy===curSY();
+        doc.setFontSize(7);doc.setFont('helvetica','normal');
+        MN.forEach(function(m,i){
+          var mi=(8+i)%12,my=mi>=8?sy:sy+1,cur=isCur&&mi===now.getMonth()&&my===now.getFullYear();
+          doc.setTextColor(cur?30:140,cur?58:132,cur?110:124);
+          var mw=doc.getTextWidth(m);
+          doc.text(m,barX+i*(barW/12)+(barW/24)-mw/2,y);
+        });
+        doc.setDrawColor(220,215,210);doc.setLineWidth(0.2);
+        doc.line(barX,y+1,barX+barW,y+1);y+=6;
+        var nowX=isCur?barX+((now-start)/total)*barW:null;
+        var active=pieces.filter(function(p){
+          if(!p.startDate)return false;
+          var ps=new Date(p.startDate),pe=p.endDate?new Date(p.endDate):now;
+          return ps<=end&&pe>=start;
+        }).sort(function(a,b){return(a.startDate||'').localeCompare(b.startDate||'');});
+        if(!active.length){
+          doc.setFontSize(9);doc.setTextColor(160,160,160);doc.text('Aucun morceau',margin,y+8);
+        } else {
+          active.forEach(function(p){
+            if(y>pageH-22)return;
+            var ps=new Date(p.startDate),pe=p.endDate?new Date(p.endDate):now;
+            var cs=Math.max(ps,start),ce=Math.min(pe,end);
+            var left=((cs-start)/total)*barW,wid=Math.max(2,((ce-cs)/total)*barW);
+            var rgb=ph(cmap[p.composer]||'#a8c4e0');
+            doc.setFontSize(7.5);doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');
+            var title=safe(p.title.length>46?p.title.slice(0,44)+'...':p.title);
+            doc.text(title,margin,y+4);
+            doc.setFillColor(rgb[0],rgb[1],rgb[2]);
+            doc.roundedRect(barX+left,y,wid,5,1,1,'F');
+            if(nowX){doc.setDrawColor(30,58,110);doc.setLineWidth(0.5);doc.line(nowX,y-1,nowX,y+6);doc.setLineWidth(0.2);}
+            y+=8;
+          });
+        }
+        y+=4;
+        doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(100,96,92);
+        doc.text('Compositeurs :',margin,y);y+=5;
+        var lx=margin;
+        composerList.forEach(function(c){
+          var rgb=ph(cmap[c]||'#a8c4e0');
+          doc.setFillColor(rgb[0],rgb[1],rgb[2]);
+          doc.roundedRect(lx,y-3,3,3,0.5,0.5,'F');
+          doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');doc.setFontSize(7);
+          var cs=safe(c);
+          doc.text(cs,lx+5,y);
+          lx+=doc.getTextWidth(cs)+12;
+          if(lx>pageW-margin-30){lx=margin;y+=5;}
+        });
+      }
+    }
+
+    doc.save('repertoire-piano.pdf');
+    toast('PDF téléchargé !','var(--green)');
+    btn.textContent='⬇ Export PDF';btn.disabled=false;
+
+  }).catch(function(err){
+    document.body.removeChild(wrapper);
+    toast('Erreur: '+err.message,'var(--red)');
+    btn.textContent='⬇ Export PDF';btn.disabled=false;
+  });
 }
 
 function curSY(){var n=new Date();return n.getMonth()>=8?n.getFullYear():n.getFullYear()-1;}
@@ -864,9 +862,9 @@ function renderTL(){
     if(!p.startDate)return false;var s=new Date(p.startDate),e=p.endDate?new Date(p.endDate):now;return s<=end&&e>=start;
   }).sort(function(a,b){return(a.startDate||'').localeCompare(b.startDate||'');});
   var grid=document.getElementById('tl-grid');
-  if(!active.length){grid.innerHTML='<div class="tl-empty">Aucun morceau sur cette periode</div>';return;}
+  if(!active.length){grid.innerHTML='<div class="tl-empty">Aucun morceau sur cette période</div>';return;}
   var isCur=tlSY===curSY(),nowPct=isCur?(((now-start)/total)*100).toFixed(2):null;
-  var MN=['Sep','Oct','Nov','Dec','Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou'];
+  var MN=['Sep','Oct','Nov','Déc','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû'];
   var mh='<div class="tl-mrow">'+MN.map(function(m,i){var mi=(8+i)%12,my=mi>=8?tlSY:tlSY+1,cur=isCur&&mi===now.getMonth()&&my===now.getFullYear();return '<div class="tl-m'+(cur?' now':'')+'">'+m+'</div>';}).join('')+'</div>';
   var rows=active.map(function(p){
     var s=new Date(p.startDate),e=p.endDate?new Date(p.endDate):now;
@@ -882,7 +880,7 @@ function renderTL(){
 function showTip(e,idx){
   var p=pieces[idx];if(!p)return;
   var notes=p.notes?'<br><span style="font-size:11px;color:var(--text2)">'+esc(p.notes.slice(0,80))+(p.notes.length>80?'...':'')+'</span>':'';
-  document.getElementById('tooltip').innerHTML='<strong>'+esc(p.title)+'</strong><em>'+esc(p.composer)+'</em><br>'+(fmt(p.startDate)||'?')+' &rarr; '+(p.endDate?fmt(p.endDate):'En cours')+notes;
+  document.getElementById('tooltip').innerHTML='<strong>'+esc(p.title)+'</strong><em>'+esc(p.composer)+'</em><br>'+(fmt(p.startDate)||'?')+' → '+(p.endDate?fmt(p.endDate):'En cours')+notes;
   document.getElementById('tooltip').style.display='block';moveTip(e);
 }
 function moveTip(e){var t=document.getElementById('tooltip');t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-8)+'px';}

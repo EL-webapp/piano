@@ -275,9 +275,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
   </div>
   <div style="flex:1;overflow:auto;background:#525659;-webkit-overflow-scrolling:touch;" id="pdf-canvas-wrap">
-    <div id="pdf-pages-container" style="padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;"></div>
-    <div style="display:flex;align-items:center;justify-content:center;padding:12px;background:#3a3a3a;position:sticky;bottom:0;">
-      <span id="pdf-page-info" style="font-size:12px;color:#ccc;"></span>
+    <canvas id="pdf-canvas" style="display:block;margin:0 auto;max-width:100%;"></canvas>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:#3a3a3a;position:sticky;bottom:0;">
+      <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">← Préc.</button>
+      <span id="pdf-page-info" style="font-size:12px;color:#ccc;min-width:80px;text-align:center;"></span>
+      <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. →</button>
     </div>
   </div>
 </div>
@@ -451,40 +453,11 @@ function openPDF(idx){
   document.getElementById('pdf-dl-link').href=url;
   document.getElementById('pdf-overlay').style.display='flex';
   document.getElementById('pdf-page-info').textContent='Chargement...';
-  var wrap=document.getElementById('pdf-canvas-wrap');
-  wrap.innerHTML='<div id="pdf-pages-container" style="padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;"></div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;padding:12px;background:#3a3a3a;position:sticky;bottom:0;">'
-    +'<span id="pdf-page-info" style="font-size:12px;color:#ccc;"></span></div>';
   loadPdfJs(function(){
     pdfjsLib.getDocument(url).promise.then(function(doc){
-      pdfDoc=doc;pdfTotal=doc.numPages;pdfPage=1;
-      document.getElementById('pdf-page-info').textContent=pdfTotal+' page'+(pdfTotal>1?'s':'');
-      renderAllPages(doc);
-    }).catch(function(){document.getElementById('pdf-page-info').textContent='Erreur de chargement';});
+      pdfDoc=doc;pdfTotal=doc.numPages;pdfPage=1;renderPdfPage(1);
+    }).catch(function(){document.getElementById('pdf-page-info').textContent='Erreur';});
   });
-}
-
-function renderAllPages(doc){
-  var container=document.getElementById('pdf-pages-container');
-  container.innerHTML='';
-  var wrap=document.getElementById('pdf-canvas-wrap');
-  var maxW=wrap.clientWidth-32;
-  var dpr=window.devicePixelRatio||1;
-  for(var i=1;i<=doc.numPages;i++){
-    (function(pageNum){
-      var canvas=document.createElement('canvas');
-      canvas.style.cssText='display:block;max-width:100%;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.3);';
-      container.appendChild(canvas);
-      doc.getPage(pageNum).then(function(page){
-        var vp=page.getViewport({scale:1});
-        var scale=(maxW/vp.width)*dpr;
-        var viewport=page.getViewport({scale:scale});
-        canvas.width=viewport.width;canvas.height=viewport.height;
-        canvas.style.width=(viewport.width/dpr)+'px';canvas.style.height=(viewport.height/dpr)+'px';
-        page.render({canvasContext:canvas.getContext('2d'),viewport:viewport});
-      });
-    })(i);
-  }
 }
 
 function renderPdfPage(num){

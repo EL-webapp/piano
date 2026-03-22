@@ -25,8 +25,8 @@
   --text:#f0eee9;--text2:#a09898;--text3:#5a5560;
   --accent:#2a4a8a;--accent-soft:#dde6f5;
   --accent2:#d4906c;--accent2-soft:#3a2820;
-  --green:#6abf92;--green-soft:#2a4a38;
-  --amber:#d4ae5a;--amber-soft:#3a3010;
+  --green:#6abf92;--green-soft:#e6f4ed;
+  --amber:#d4ae5a;--amber-soft:#fdf3df;
   --red:#d47068;--red-soft:#2e1a18;
   --shadow:0 2px 12px rgba(0,0,0,.3);--shadow-lg:0 8px 32px rgba(0,0,0,.4);
 }
@@ -180,7 +180,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div class="header">
   <div>
     <div class="eyebrow">Journal de pratique</div>
-    <div class="htitle">Mon <span>Repertoire</span></div>
+    <div class="htitle">Mon <span>Répertoire</span></div>
     <div class="hsub">Elise &amp; Camille G. &mdash; depuis octobre 2021</div>
   </div>
   <div class="hright">
@@ -203,15 +203,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <select class="fsel" id="fStatus" onchange="renderCards()">
       <option value="">Tous statuts</option>
       <option value="en-cours">En cours</option>
-      <option value="maitrise">Maitrise</option>
-      <option value="a-revoir">A revoir</option>
+      <option value="maitrise">Maîtrisé</option>
+      <option value="a-revoir">À revoir</option>
       <option value="en-pause">En pause</option>
     </select>
     <select class="fsel" id="fLevel" onchange="renderCards()">
       <option value="">Tous niveaux</option>
-      <option value="debutant">Debutant</option>
-      <option value="intermediaire">Intermediaire</option>
-      <option value="avance">Avance</option>
+      <option value="debutant">Débutant</option>
+      <option value="intermediaire">Intermédiaire</option>
+      <option value="avance">Avancé</option>
     </select>
     <button class="btn-p" id="btn-add" onclick="openModal()">+ Ajouter</button>
     <button class="btn-s" onclick="exportPDF()">&#8615; Export PDF</button>
@@ -293,16 +293,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
         <div class="field"><label>Compositeur *</label><input type="text" id="f-composer" placeholder="ex. Chopin"></div>
         <div class="field"><label>Niveau</label>
           <select id="f-level">
-            <option value="debutant">Debutant</option>
-            <option value="intermediaire" selected>Intermediaire</option>
-            <option value="avance">Avance</option>
+            <option value="debutant">Débutant</option>
+            <option value="intermediaire" selected>Intermédiaire</option>
+            <option value="avance">Avancé</option>
           </select>
         </div>
         <div class="field"><label>Statut</label>
           <select id="f-status">
             <option value="en-cours">En cours</option>
-            <option value="maitrise">Maitrise</option>
-            <option value="a-revoir">A revoir</option>
+            <option value="maitrise">Maîtrisé</option>
+            <option value="a-revoir">À revoir</option>
             <option value="en-pause">En pause</option>
           </select>
         </div>
@@ -351,8 +351,8 @@ function tlC(c){if(!tlCM[c])tlCM[c]=TLC[Object.keys(tlCM).length%TLC.length];ret
 function cC(c){if(!cCM[c])cCM[c]=CC[Object.keys(cCM).length%CC.length];return cCM[c];}
 function cbadge(c){var col=cC(c);return '<span class="badge" style="background:'+col.bg+';color:'+col.t+'">'+esc(c)+'</span>';}
 
-var SL={'en-cours':'En cours','maitrise':'Maitrise','a-revoir':'A revoir','en-pause':'En pause'};
-var LL={'debutant':'Debutant','intermediaire':'Intermediaire','avance':'Avance'};
+var SL={'en-cours':'En cours','maitrise':'Maîtrisé','a-revoir':'À revoir','en-pause':'En pause'};
+var LL={'debutant':'Débutant','intermediaire':'Intermédiaire','avance':'Avancé'};
 var SI={'en-cours':'&#127925;','maitrise':'&#128170;','a-revoir':'&#8634;','en-pause':'&#9208;'};
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -582,7 +582,7 @@ function renderCards(){
       enc=pieces.filter(function(p){return p.status==='en-cours';}).length,
       comp=new Set(pieces.map(function(p){return p.composer;})).size;
   document.getElementById('statsBar').innerHTML=
-    [[tot,'&#127929;','Morceaux','si-p'],[mai,'&#128170;','Maitrises','si-g'],[enc,'&#127925;','En cours','si-a'],[comp,'&#9997;&#127995;','Compositeurs','si-r']]
+    [[tot,'&#127929;','Morceaux','si-p'],[mai,'&#128079;&#127995;','Maîtrisés','si-g'],[enc,'&#127925;','En cours','si-a'],[comp,'&#9997;&#127995;','Compositeurs','si-r']]
     .map(function(x){return '<div class="stat"><div class="stat-icon '+x[3]+'">'+x[1]+'</div><div class="stat-text"><span class="stat-num">'+x[0]+'</span><span class="stat-label">'+x[2]+'</span></div></div>';}).join('');
   document.getElementById('fcount').textContent=data.length+' / '+tot+' morceaux';
   var wrap=document.getElementById('cardsWrap');

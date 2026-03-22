@@ -534,10 +534,10 @@ function toggleScoreOver(){
   var visible=so.style.display==='flex';
   if(visible){
     so.style.display='none';
-    document.getElementById('btn-score-over').textContent='&#128196; Voir partition';
+          document.getElementById('btn-score-over').textContent='📄 Voir partition';
   }else{
     so.style.display='flex';so.style.flexDirection='column';
-    document.getElementById('btn-score-over').textContent='&#128196; Masquer partition';
+          document.getElementById('btn-score-over').textContent='📄 Masquer partition';
     if(currentVideoIdx!==null){
       var p=pieces[currentVideoIdx];
       loadPdfJs(function(){
@@ -762,14 +762,13 @@ function exportPDF(){
   y=drawTH(y);
 
   pieces.forEach(function(p,idx){
-    var noteLines=doc.splitTextToSize(safe(p.notes||''),40);
     var rowH=7;
     if(y+rowH>pageH-14){doc.addPage();y=drawHeader();y=drawTH(y);}
     if(idx%2===0){doc.setFillColor(249,248,246);doc.rect(margin,y,pageW-margin*2,rowH,'F');}
     doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');doc.setFontSize(8);
     var x=margin;
-    var cells=[safe(p.title),safe(p.composer),sl[p.status]||p.status,ll[p.level]||p.level,
-      p.startDate?fmt(p.startDate)+(p.endDate?'\n> '+fmt(p.endDate):''):''];
+    var dateStr2=p.startDate?fmt(p.startDate)+(p.endDate?' > '+fmt(p.endDate):''):'';
+    var cells=[safe(p.title),safe(p.composer),sl[p.status]||p.status,ll[p.level]||p.level,dateStr2];
     cells.forEach(function(cell,i){
       var lines=doc.splitTextToSize(String(cell||''),colW[i]-3);
       doc.text(lines,x+2,y+4.5);x+=colW[i];

@@ -726,6 +726,10 @@ function exportPDF(){
       var rgb=ph(st[2]);
       doc.setFillColor(rgb[0],rgb[1],rgb[2]);
       doc.roundedRect(sx,4,36,20,2,2,'F');
+      // Petit carré coloré en haut à gauche de la boite
+      var darkRgb=[Math.max(0,rgb[0]-60),Math.max(0,rgb[1]-60),Math.max(0,rgb[2]-60)];
+      doc.setFillColor(darkRgb[0],darkRgb[1],darkRgb[2]);
+      doc.roundedRect(sx+3,7,4,4,0.5,0.5,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(42,37,32);
       var nw=doc.getTextWidth(String(st[0]));
       doc.text(String(st[0]),sx+18-nw/2,14);
@@ -787,7 +791,7 @@ function exportPDF(){
       var start=new Date(sy,8,1),end=new Date(sy+1,7,31,23,59,59),total=end-start;
       doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(30,58,110);
       doc.text('Timeline '+sy+' - '+(sy+1),margin,y+7);y+=14;
-      var lblW=68,barX=margin+lblW,barW=pageW-margin*2-lblW;
+      var lblW=90,barX=margin+lblW,barW=pageW-margin*2-lblW;
       doc.setFontSize(7);doc.setFont('helvetica','normal');
       var isCur=sy===curSY();
       MN.forEach(function(m,i){
@@ -814,7 +818,7 @@ function exportPDF(){
           var left=((cs-start)/total)*barW,wid=Math.max(2,((ce-cs)/total)*barW);
           var rgb=ph(cmap[p.composer]||'#a8c4e0');
           doc.setFontSize(7.5);doc.setTextColor(42,37,32);doc.setFont('helvetica','normal');
-          var title=safe(p.title.length>32?p.title.slice(0,30)+'...':p.title);
+          var title=safe(p.title.length>46?p.title.slice(0,44)+'...':p.title);
           doc.text(title,margin,y+4);
           doc.setFillColor(rgb[0],rgb[1],rgb[2]);
           doc.roundedRect(barX+left,y,wid,5,1,1,'F');

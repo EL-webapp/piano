@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Répertoire Piano — Elise</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#f7f5f2; --surface:#ffffff; --surface2:#f0ede8; --border:#e8e3dc;
@@ -32,7 +32,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:28px 32px 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
 .header-eyebrow{font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
-.header-title{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,48px);font-weight:600;line-height:1.1;}
+.header-title{font-family:'Lora',serif;font-size:clamp(32px,5vw,48px);font-weight:600;line-height:1.1;}
 .header-title span{color:var(--accent);font-style:italic;}
 .header-sub{font-size:13px;color:var(--text2);margin-top:6px;font-weight:300;}
 .header-right{display:flex;align-items:center;gap:10px;}
@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .stat-icon.green{background:var(--green-soft);}
 .stat-icon.amber{background:var(--amber-soft);}
 .stat-icon.rose{background:var(--red-soft);}
-.stat-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--text);line-height:1;display:block;}
+.stat-num{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);line-height:1;display:block;}
 .stat-label{font-size:11px;color:var(--text2);display:block;margin-top:2px;}
 
 .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;}
@@ -547,11 +547,53 @@ function moveTip(e){const t=document.getElementById('tooltip');t.style.left=(e.c
 function hideTip(){document.getElementById('tooltip').style.display='none';}
 
 // ── INIT ──
-if (!getToken()) {
-  const t = prompt('Entre ton token GitHub pour activer la synchronisation :');
-  if (t && t.trim()) setToken(t.trim());
+const token = getToken();
+if (token) {
+  ghLoad();
+} else {
+  // Mode lecture seule — pas de demande de token
+  ghLoadReadOnly();
 }
-ghLoad();
+
+function isReadOnly() { return !getToken(); }
+
+async function ghLoadReadOnly() {
+  setSyncStatus('syncing', 'Chargement…');
+  try {
+    const r = await fetch(GH_API + '?t=' + Date.now(), {
+      headers: { Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    fileSha = data.sha;
+    const content = JSON.parse(atob(data.content.replace(/\n/g, '')));
+    pieces = content.length ? content : BAKED.map(p=>({...p}));
+    lastSync = new Date();
+    setSyncStatus('ok', 'Lecture seule');
+    updateFooterSync();
+  } catch(e) {
+    setSyncStatus('error', 'Erreur de chargement');
+    pieces = BAKED.map(p=>({...p}));
+  }
+  renderCards();
+  updateReadOnlyUI();
+}
+
+function updateReadOnlyUI() {
+  if (!isReadOnly()) return;
+  // Grise les boutons d'action
+  const btnAdd = document.querySelector('.btn-primary');
+  if (btnAdd) { btnAdd.disabled = true; btnAdd.style.opacity = '0.4'; btnAdd.style.cursor = 'not-allowed'; btnAdd.title = 'Mode lecture seule'; }
+  const btnExport = document.querySelector('.btn-secondary');
+  // On laisse Export PDF actif
+  // On ajoute un badge lecture seule dans le header
+  const badge = document.createElement('span');
+  badge.style.cssText = 'font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:20px;';
+  badge.textContent = '👁 Lecture seule';
+  document.getElementById('sync-label').replaceWith(badge);
+  // Cache les boutons edit/del sur les cartes
+  document.querySelectorAll('.card-actions').forEach(a => a.style.display = 'none');
+}
 </script>
 </body>
 </html>

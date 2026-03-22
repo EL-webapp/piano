@@ -563,7 +563,12 @@ function switchTab(n){
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',['liste','timeline'][i]===n);});
   document.getElementById('tab-liste').style.display=n==='liste'?'block':'none';
   document.getElementById('tab-timeline').style.display=n==='timeline'?'block':'none';
-  if(n==='timeline')renderTL();
+  if(n==='timeline'){
+    // Démarre sur l'année la plus ancienne
+    var sySorted=pieces.filter(function(p){return p.startDate;}).map(function(p){var d=new Date(p.startDate);return d.getMonth()>=8?d.getFullYear():d.getFullYear()-1;});
+    if(sySorted.length)tlSY=Math.min.apply(null,sySorted);
+    renderTL();
+  }
 }
 function getFiltered(){
   var q=document.getElementById('searchInput').value.toLowerCase();

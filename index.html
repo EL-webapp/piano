@@ -102,7 +102,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .btn-upload:hover{border-color:var(--accent);color:var(--accent);}
 .empty{grid-column:1/-1;text-align:center;padding:80px 24px;color:var(--text3);}
 
-/* PDF VIEWER */
+/* VIDEO VIEWER */
+.video-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;flex-direction:column;backdrop-filter:blur(4px);animation:fadeO .15s ease;}
+.video-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;}
+.video-title{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--text);}
+.video-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+.video-wrap iframe{width:100%;max-width:900px;aspect-ratio:16/9;border:none;border-radius:var(--radius-sm);}
 .pdf-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;flex-direction:column;backdrop-filter:blur(4px);animation:fadeO .15s ease;}
 .pdf-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;}
 .pdf-title{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--text);}
@@ -267,6 +272,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
         <div class="field"><label>Date de fin</label><input type="date" id="f-end"></div>
         <div class="field full"><label>Notes</label><textarea id="f-notes" placeholder="Tempo, conseils…"></textarea></div>
         <div class="field full">
+          <label>Lien vidéo YouTube</label>
+          <input type="url" id="f-video" placeholder="ex. https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="field full">
           <label>Partition (PDF)</label>
           <div class="pdf-upload-zone" id="pdf-zone">
             <input type="file" id="f-pdf" accept=".pdf" onchange="onPdfSelect(event)">
@@ -280,6 +289,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <button class="btn-s" onclick="closeModal()">Annuler</button>
       <button class="btn-p" id="btn-save" onclick="savePiece()">Enregistrer</button>
     </div>
+  </div>
+</div>
+
+<!-- VIDEO VIEWER -->
+<div class="video-overlay" id="video-overlay" style="display:none">
+  <div class="video-header">
+    <span class="video-title" id="video-viewer-title"></span>
+    <button class="btn-x" onclick="closeVideo()" style="font-size:22px;">✕</button>
+  </div>
+  <div class="video-wrap">
+    <iframe id="video-frame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
   </div>
 </div>
 
@@ -443,7 +463,24 @@ function pdfUrl(piece){
   return 'https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/partitions/'+pdfFilename(piece);
 }
 
-// ── PDF.js VIEWER ──
+// ── VIDEO VIEWER ──
+function ytEmbedUrl(url){
+  if(!url)return null;
+  var m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  return m?'https://www.youtube.com/embed/'+m[1]+'?autoplay=1':null;
+}
+function openVideo(idx){
+  var p=pieces[idx];
+  var embed=ytEmbedUrl(p.videoUrl);
+  if(!embed){toast('Lien YouTube invalide','var(--red)');return;}
+  document.getElementById('video-viewer-title').textContent=p.title+' — '+p.composer;
+  document.getElementById('video-frame').src=embed;
+  document.getElementById('video-overlay').style.display='flex';
+}
+function closeVideo(){
+  document.getElementById('video-overlay').style.display='none';
+  document.getElementById('video-frame').src='';
+}
 var pdfjsLib=null, pdfDoc=null, pdfPage=1, pdfTotal=0, pdfRendering=false;
 
 function loadPdfJs(cb){
@@ -485,11 +522,14 @@ function renderPdfPage(num){
     var maxW=wrap.clientWidth-32;
     var vp=page.getViewport({scale:1});
     var scale=maxW/vp.width;
-    var viewport=page.getViewport({scale:scale});
+    var dpr=window.devicePixelRatio||1;
+    var viewport=page.getViewport({scale:scale*dpr});
     var canvas=document.getElementById('pdf-canvas');
     var ctx=canvas.getContext('2d');
     canvas.width=viewport.width;
     canvas.height=viewport.height;
+    canvas.style.width=(viewport.width/dpr)+'px';
+    canvas.style.height=(viewport.height/dpr)+'px';
     page.render({canvasContext:ctx,viewport:viewport}).promise.then(function(){
       pdfRendering=false;
     });
@@ -531,22 +571,18 @@ function renderCards(){
       enc=pieces.filter(function(p){return p.status==='en-cours';}).length,
       comp=new Set(pieces.map(function(p){return p.composer;})).size;
   document.getElementById('statsBar').innerHTML=
-    [[tot,'🎹','Morceaux','si-p'],[mai,'✓','Maîtrisés','si-g'],[enc,'🎵','En cours','si-a'],[comp,'✍🏻','Compositeurs','si-r']]
+    [[tot,'🎹','Morceaux','si-p'],[mai,'💪','Maîtrisés','si-g'],[enc,'😅','En cours','si-a'],[comp,'✍🏻','Compositeurs','si-r']]
     .map(function(x){return '<div class="stat"><div class="stat-icon '+x[3]+'">'+x[1]+'</div><div class="stat-text"><span class="stat-num">'+x[0]+'</span><span class="stat-label">'+x[2]+'</span></div></div>';}).join('');
   document.getElementById('fcount').textContent=data.length+' / '+tot+' morceaux';
   var wrap=document.getElementById('cardsWrap');
   if(!data.length){wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:16px">𝄽</div>Aucun morceau trouvé</div>';return;}
   var ro=isRO();
   wrap.innerHTML=data.map(function(p,i){
-    var hasPdf=!!p.pdfFile;
+    var hasPdf=!!p.pdfFile, hasVideo=!!p.videoUrl;
     var footer='';
-    if(hasPdf){
-      footer+='<button class="btn-pdf" onclick="openPDF('+p._i+')">📄 Partition</button>';
-    } else if(!ro){
-      footer+='<label class="btn-upload" title="Ajouter une partition PDF" style="cursor:pointer;">'
-        +'<input type="file" accept=".pdf" style="display:none" onchange="quickUploadPDF(event,'+p._i+')">'
-        +'📄 Ajouter partition</label>';
-    }
+    if(hasPdf) footer+='<button class="btn-pdf" onclick="openPDF('+p._i+')">📄 Partition</button>';
+    else if(!ro) footer+='<label class="btn-upload" title="Ajouter une partition PDF" style="cursor:pointer;"><input type="file" accept=".pdf" style="display:none" onchange="quickUploadPDF(event,'+p._i+')">📄 Ajouter partition</label>';
+    if(hasVideo) footer+='<button class="btn-pdf" style="color:var(--red)" onclick="openVideo('+p._i+')">▶ Vidéo</button>';
     return '<div class="card" style="animation-delay:'+i*30+'ms">'
       +'<div class="card-top"><div class="badges">'
       +'<span class="badge b-'+p.status+'">'+(SI[p.status]||'')+' '+(SL[p.status]||p.status)+'</span>'
@@ -608,7 +644,7 @@ function openModal(idx){
   document.getElementById('f-status').value=p?p.status:'en-cours';
   document.getElementById('f-start').value=p?p.startDate:new Date().toISOString().slice(0,10);
   document.getElementById('f-end').value=p?p.endDate:'';
-  document.getElementById('f-notes').value=p?p.notes:'';
+  document.getElementById('f-video').value=p?p.videoUrl||'':'';
   document.getElementById('f-pdf').value='';
   document.getElementById('overlay').style.display='flex';
   setTimeout(function(){document.getElementById('f-title').focus();},50);
@@ -624,7 +660,8 @@ async function savePiece(){
   document.getElementById('btn-save').textContent='Sauvegarde…';
   var d={title:title,composer:composer,level:document.getElementById('f-level').value,
          status:document.getElementById('f-status').value,startDate:document.getElementById('f-start').value,
-         endDate:document.getElementById('f-end').value,notes:document.getElementById('f-notes').value.trim()};
+         endDate:document.getElementById('f-end').value,         notes:document.getElementById('f-notes').value.trim(),
+         videoUrl:document.getElementById('f-video').value.trim()};
   if(editIdx!==null){
     d.pdfFile=pieces[editIdx].pdfFile||null;
     pieces[editIdx]=Object.assign({},pieces[editIdx],d);
@@ -645,7 +682,7 @@ async function savePiece(){
   document.getElementById('btn-save').disabled=false;
   document.getElementById('btn-save').textContent='Enregistrer';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closePDF();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closePDF();closeVideo();}});
 function exportPDF(){window.print();}
 
 // ── TIMELINE ──

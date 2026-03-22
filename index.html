@@ -274,9 +274,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <button class="btn-x" onclick="closePDF()" style="font-size:22px;">✕</button>
     </div>
   </div>
-  <div style="flex:1;overflow:auto;background:#525659;-webkit-overflow-scrolling:touch;" id="pdf-canvas-wrap">
-    <canvas id="pdf-canvas" style="display:block;margin:0 auto;max-width:100%;"></canvas>
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:#3a3a3a;position:sticky;bottom:0;">
+  <div style="flex:1;overflow:auto;background:#525659;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;" id="pdf-canvas-wrap">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:16px;">
+      <canvas id="pdf-canvas" style="display:block;max-width:100%;max-height:100%;"></canvas>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:#3a3a3a;flex-shrink:0;">
       <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">← Préc.</button>
       <span id="pdf-page-info" style="font-size:12px;color:#ccc;min-width:80px;text-align:center;"></span>
       <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. →</button>
@@ -623,9 +625,20 @@ function openModal(idx){
   document.getElementById('pdf-name').textContent=p&&p.pdfFile?'Partition: '+p.pdfFile:'';
   document.getElementById('btn-del-pdf').style.display=p&&p.pdfFile?'block':'none';
   document.getElementById('overlay').style.display='flex';
+  // Bloque le scroll arrière-plan sur mobile
+  document.body.style.overflow='hidden';
+  document.body.style.position='fixed';
+  document.body.style.width='100%';
   setTimeout(function(){document.getElementById('f-title').focus();},50);
 }
-function closeModal(){document.getElementById('overlay').style.display='none';editIdx=null;pendingPdfB64=null;}
+function closeModal(){
+  document.getElementById('overlay').style.display='none';
+  editIdx=null;pendingPdfB64=null;
+  // Restaure le scroll
+  document.body.style.overflow='';
+  document.body.style.position='';
+  document.body.style.width='';
+}
 
 function deletePdf(){
   if(!confirm('Supprimer la partition de ce morceau ?'))return;

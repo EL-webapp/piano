@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Répertoire Piano — Elise</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f5f2; --surface:#ffffff; --surface2:#f0ede8; --border:#e8e3dc;
+  --text:#2a2520; --text2:#7a7068; --text3:#b0a898;
+  --accent:#1e3a6e; --accent-soft:#e0e8f5;
+  --accent2:#c97b5a; --accent2-soft:#faeee7;
+  --green:#5a9e7c; --green-soft:#e6f4ed;
+  --amber:#c49a3a; --amber-soft:#fdf3df;
+  --red:#c0564a; --red-soft:#fcecea;
+  --shadow:0 2px 12px rgba(0,0,0,0.06); --shadow-lg:0 8px 32px rgba(0,0,0,0.10);
+  --radius:16px; --radius-sm:10px;
+}
+[data-theme="dark"] {
+  --bg:#18171a; --surface:#232228; --surface2:#2c2b32; --border:#35333d;
+  --text:#f0eee9; --text2:#a09898; --text3:#5a5560;
+  --accent:#2a4a8a; --accent-soft:#dde6f5;
+  --accent2:#d4906c; --accent2-soft:#3a2820;
+  --green:#6abf92; --green-soft:#1a2e24;
+  --amber:#d4ae5a; --amber-soft:#2e2616;
+  --red:#d47068; --red-soft:#2e1a18;
+  --shadow:0 2px 12px rgba(0,0,0,0.3); --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;transition:background .3s,color .3s;}
+
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:28px 32px 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+.header-eyebrow{font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.header-title{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,48px);font-weight:600;line-height:1.1;}
+.header-title span{color:var(--accent);font-style:italic;}
+.header-sub{font-size:13px;color:var(--text2);margin-top:6px;font-weight:300;}
+.btn-theme{background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .2s;}
+.btn-theme:hover{border-color:var(--accent);color:var(--accent);}
+
+.stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;}
+.stat{display:flex;align-items:center;gap:10px;padding:16px 24px 16px 0;margin-right:24px;border-right:1px solid var(--border);flex-shrink:0;}
+.stat:last-child{border-right:none;}
+.stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.stat-icon.purple{background:var(--accent-soft);}
+.stat-icon.green{background:var(--green-soft);}
+.stat-icon.amber{background:var(--amber-soft);}
+.stat-icon.rose{background:var(--red-soft);}
+.stat-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--text);line-height:1;display:block;}
+.stat-label{font-size:11px;color:var(--text2);display:block;margin-top:2px;}
+
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;}
+.tab-btn{background:none;border:none;color:var(--text2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:14px 4px;margin-right:28px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.controls{display:flex;gap:10px;padding:20px 32px;background:var(--bg);flex-wrap:wrap;align-items:center;}
+.search-wrap{flex:1;min-width:180px;position:relative;}
+.search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px 10px 38px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.search-wrap input::placeholder{color:var(--text3);}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.filter-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;outline:none;cursor:pointer;transition:border-color .2s;}
+.filter-select:focus{border-color:var(--accent);}
+.btn-primary{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .2s;white-space:nowrap;}
+.btn-primary:hover{opacity:.88;}
+.btn-secondary{background:var(--surface);color:var(--text2);border:1px solid var(--border);padding:10px 16px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+.cards-wrap{padding:0 32px 32px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;animation:cardIn .25s ease forwards;opacity:0;position:relative;}
+.card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.card-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-status-en-cours{background:var(--amber-soft);color:var(--amber);}
+.badge-status-maîtrisé{background:var(--green-soft);color:var(--green);}
+.badge-status-à-revoir{background:var(--red-soft);color:var(--red);}
+.badge-status-en-pause{background:var(--surface2);color:var(--text2);}
+.badge-level-débutant{background:var(--green-soft);color:var(--green);}
+.badge-level-intermédiaire{background:var(--accent-soft);color:var(--accent);}
+.badge-level-avancé{background:var(--accent2-soft);color:var(--accent2);}
+.card-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0;}
+.card:hover .card-actions{opacity:1;}
+.card-action{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:4px 7px;border-radius:6px;transition:all .15s;}
+.card-action:hover{background:var(--surface2);color:var(--text);}
+.card-action.del:hover{background:var(--red-soft);color:var(--red);}
+.card-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:8px;}
+.card-composer{margin-bottom:12px;}
+.card-meta{display:flex;gap:16px;flex-wrap:wrap;}
+.card-meta-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);}
+.card-notes{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.5;font-style:italic;}
+.card-notes-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle;}
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 24px;color:var(--text3);}
+.empty-icon{font-size:48px;display:block;margin-bottom:16px;}
+
+.tl-controls{display:flex;align-items:center;gap:16px;padding:20px 32px;background:var(--bg);flex-wrap:wrap;}
+.year-nav{display:flex;align-items:center;gap:10px;}
+.btn-yr{background:var(--surface);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .15s;}
+.btn-yr:hover{border-color:var(--accent);color:var(--accent);}
+.btn-yr:disabled{opacity:.25;cursor:default;pointer-events:none;}
+.yr-label{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;min-width:120px;text-align:center;}
+.tl-legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.tl-wrap{padding:0 32px 32px;overflow-x:auto;}
+.tl-inner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);min-width:520px;}
+.tl-month-row{display:flex;padding-left:200px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.tl-m{flex:1;font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);text-align:center;padding:10px 0;}
+.tl-m.now{color:var(--accent);font-weight:600;}
+.tl-row{display:flex;align-items:center;min-height:44px;border-bottom:1px solid var(--border);transition:background .12s;}
+.tl-row:last-child{border-bottom:none;}
+.tl-row:hover{background:var(--surface2);}
+.tl-lbl{width:200px;min-width:200px;padding:8px 16px 8px 20px;}
+.tl-lbl-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.tl-lbl-composer{font-size:11px;color:var(--text3);font-style:italic;display:block;}
+.tl-bar-area{flex:1;position:relative;height:36px;padding-right:16px;}
+.tl-bar{position:absolute;top:50%;transform:translateY(-50%);height:10px;border-radius:6px;cursor:pointer;transition:height .15s;min-width:4px;}
+.tl-bar:hover{height:18px;}
+.tl-now-line{position:absolute;top:0;bottom:0;width:1.5px;background:var(--accent);opacity:.4;pointer-events:none;border-radius:2px;}
+.tl-empty{text-align:center;padding:48px;font-size:13px;color:var(--text3);}
+
+.tooltip{position:fixed;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:var(--radius-sm);font-size:12px;pointer-events:none;z-index:300;max-width:260px;display:none;box-shadow:var(--shadow-lg);}
+.tooltip strong{display:block;font-family:'Playfair Display',serif;font-size:14px;margin-bottom:4px;}
+.tooltip em{color:var(--text2);font-style:italic;}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;animation:fadeO .15s ease;backdrop-filter:blur(4px);}
+@keyframes fadeO{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-width:500px;width:100%;box-shadow:var(--shadow-lg);animation:slideM .2s ease;}
+@keyframes slideM{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.modal-hd h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;}
+.btn-x{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .15s;line-height:1;}
+.btn-x:hover{background:var(--surface2);color:var(--text);}
+.modal-body{padding:22px 24px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3);}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.field textarea{resize:vertical;min-height:72px;}
+.field select option{background:var(--surface);}
+.modal-ft{padding:16px 24px 20px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);}
+
+.delete-confirm{background:var(--red-soft);border:1px solid var(--red);border-radius:var(--radius-sm);padding:14px 16px;margin:0 32px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.delete-confirm span{font-size:13px;color:var(--red);flex:1;}
+.btn-del-confirm{background:var(--red);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+.btn-del-cancel{background:none;border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;}
+
+.footer{border-top:1px solid var(--border);padding:12px 32px;font-size:11px;color:var(--text3);display:flex;justify-content:space-between;background:var(--surface);}
+.footer-dot{color:var(--green);}
+
+@media(max-width:600px){
+  .header,.controls,.cards-wrap,.tl-controls,.tl-wrap{padding-left:16px;padding-right:16px;}
+  .stats,.tabs{padding:0 16px;}
+  .form-grid{grid-template-columns:1fr;}
+  .field.full{grid-column:1;}
+  .delete-confirm{margin:0 16px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-eyebrow">Journal de pratique · 5 ans de piano</div>
+    <div class="header-title">Mon <span>Répertoire</span></div>
+    <div class="header-sub">Elise &amp; Camille G. — depuis octobre 2021</div>
+  </div>
+  <button class="btn-theme" onclick="toggleTheme()" id="btn-theme" title="Changer de thème">🌙</button>
+</div>
+
+<div class="stats" id="statsBar"></div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('liste')">Morceaux</button>
+  <button class="tab-btn" onclick="switchTab('timeline')">Timeline</button>
+</div>
+
+<div id="tab-liste">
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">♩</span>
+      <input type="text" id="searchInput" placeholder="Rechercher un titre, un compositeur…" oninput="renderCards()">
+    </div>
+    <select class="filter-select" id="filterStatus" onchange="renderCards()">
+      <option value="">Tous statuts</option>
+      <option value="en-cours">En cours</option>
+      <option value="maîtrisé">Maîtrisé</option>
+      <option value="à-revoir">À revoir</option>
+      <option value="en-pause">En pause</option>
+    </select>
+    <select class="filter-select" id="filterLevel" onchange="renderCards()">
+      <option value="">Tous niveaux</option>
+      <option value="débutant">Débutant</option>
+      <option value="intermédiaire">Intermédiaire</option>
+      <option value="avancé">Avancé</option>
+    </select>
+    <button class="btn-primary" onclick="openModal()">+ Ajouter</button>
+    <button class="btn-secondary" onclick="exportPDF()">⬇ Export PDF</button>
+    <button class="btn-secondary" onclick="copyData()" id="btn-copy">⎘ Copier données</button>
+  </div>
+  <div id="delete-confirm-wrap"></div>
+  <div class="cards-wrap" id="cardsWrap"></div>
+  <div class="footer">
+    <span>Sauvegarde auto <span class="footer-dot">●</span> navigateur</span>
+    <span id="footer-count"></span>
+  </div>
+</div>
+
+<div id="tab-timeline" style="display:none">
+  <div class="tl-controls">
+    <div class="year-nav">
+      <button class="btn-yr" id="btn-prev" onclick="changeYear(-1)">‹</button>
+      <span class="yr-label" id="yr-label"></span>
+      <button class="btn-yr" id="btn-next" onclick="changeYear(1)">›</button>
+    </div>
+    <div class="tl-legend" id="tl-legend"></div>
+  </div>
+  <div class="tl-wrap">
+    <div class="tl-inner" id="tl-grid"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="overlay" id="overlay" style="display:none" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2 id="modal-title">Ajouter un morceau</h2>
+      <button class="btn-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Titre *</label><input type="text" id="f-title" placeholder="ex. Nocturne en mi bémol op.9 n°2"></div>
+        <div class="field"><label>Compositeur *</label><input type="text" id="f-composer" placeholder="ex. Chopin"></div>
+        <div class="field"><label>Niveau</label>
+          <select id="f-level"><option value="débutant">Débutant</option><option value="intermédiaire" selected>Intermédiaire</option><option value="avancé">Avancé</option></select>
+        </div>
+        <div class="field"><label>Statut</label>
+          <select id="f-status"><option value="en-cours">En cours</option><option value="maîtrisé">Maîtrisé</option><option value="à-revoir">À revoir</option><option value="en-pause">En pause</option></select>
+        </div>
+        <div class="field"><label>Date de début</label><input type="date" id="f-start"></div>
+        <div class="field"><label>Date de fin / MAJ</label><input type="date" id="f-end"></div>
+        <div class="field full"><label>Notes</label><textarea id="f-notes" placeholder="Tempo, conseils, observations…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary" onclick="savePiece()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'piano_rep_v3';
+let pieces = [], editingIdx = null, pendingDeleteIdx = null;
+
+const BAKED = [
+  {"title":"Aria BWV 516 (Petit livre d'Anna Magdalena Bach)","composer":"J.S. Bach","level":"débutant","status":"en-pause","startDate":"2021-10-14","endDate":"2021-11-18","notes":"Pourquoi es-tu si triste..."},
+  {"title":"Prélude & Fugue II (Do min) BWV 847","composer":"J.S. Bach","level":"intermédiaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
+  {"title":"Rêverie","composer":"Debussy","level":"intermédiaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
+  {"title":"Suite Française III (Si min) BWV 814","composer":"J.S. Bach","level":"intermédiaire","status":"en-pause","startDate":"2021-11-25","endDate":"2022-03-10","notes":""},
+  {"title":"Carnaval Op.9 — Chiarina & Chopin","composer":"R. Schumann","level":"intermédiaire","status":"en-pause","startDate":"2022-01-06","endDate":"2022-02-24","notes":""},
+  {"title":"6 variations sur le thème de la Molinera","composer":"Beethoven","level":"débutant","status":"en-pause","startDate":"2022-02-10","endDate":"2022-04-28","notes":""},
+  {"title":"Danzas Españolas — Oriental & Andaluza","composer":"Granados","level":"intermédiaire","status":"en-pause","startDate":"2022-03-24","endDate":"2022-06-23","notes":""},
+  {"title":"Sonate 19 (Mi min) Hoboken XVI:47","composer":"Haydn","level":"intermédiaire","status":"en-pause","startDate":"2022-06-16","endDate":"2022-09-29","notes":""}
+];
+
+// ── Couleurs timeline (pastels vifs pour barres)
+const TL_COLORS = ['#a8c4e0','#f0b8a8','#a8d4b8','#f0d8a0','#d4b0cc','#a8d8d4','#f0c8a0','#b8d0a8','#c8b8e0','#f0b8c8'];
+// ── Couleurs compositeurs cartes (pastels distincts des statuts/niveaux)
+const C_COLORS = [
+  {bg:'#dce8f5',text:'#1a3a6a'},
+  {bg:'#fde8d8',text:'#7a3010'},
+  {bg:'#f0e8f8',text:'#4a2080'},
+  {bg:'#e0f0f0',text:'#1a5858'},
+  {bg:'#fdf0d8',text:'#6a4008'},
+  {bg:'#f8e8f0',text:'#7a1848'},
+  {bg:'#e8eef8',text:'#1a2860'},
+  {bg:'#f8f0e0',text:'#5a3808'},
+  {bg:'#e8f8f8',text:'#0a5050'},
+  {bg:'#f0e0f8',text:'#501870'},
+];
+
+let tlColorMap = {}, cColorMap = {}, tlSY = currentSY();
+
+function tlColorFor(c) { if(!tlColorMap[c]) tlColorMap[c]=TL_COLORS[Object.keys(tlColorMap).length%TL_COLORS.length]; return tlColorMap[c]; }
+function cColorFor(c)  { if(!cColorMap[c])  cColorMap[c]=C_COLORS[Object.keys(cColorMap).length%C_COLORS.length];   return cColorMap[c]; }
+function composerBadge(c) { const col=cColorFor(c); return `<span class="badge" style="background:${col.bg};color:${col.text}">${esc(c)}</span>`; }
+
+function load() { try { const s=localStorage.getItem(KEY); pieces=s?JSON.parse(s):BAKED.map(p=>({...p})); } catch { pieces=BAKED.map(p=>({...p})); } }
+function save() { localStorage.setItem(KEY,JSON.stringify(pieces)); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(d) { if(!d) return null; const[y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+
+const SL = {'en-cours':'En cours','maîtrisé':'Maîtrisé','à-revoir':'À revoir','en-pause':'En pause'};
+const LL = {'débutant':'Débutant','intermédiaire':'Intermédiaire','avancé':'Avancé'};
+const SI = {'en-cours':'🎵','maîtrisé':'✓','à-revoir':'↺','en-pause':'⏸'};
+
+function toggleTheme() {
+  const html=document.documentElement, isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('btn-theme').textContent=isDark?'🌙':'☀️';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['liste','timeline'][i]===name));
+  document.getElementById('tab-liste').style.display    = name==='liste'?'block':'none';
+  document.getElementById('tab-timeline').style.display = name==='timeline'?'block':'none';
+  if(name==='timeline') renderTimeline();
+}
+
+function getFiltered() {
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const st=document.getElementById('filterStatus').value;
+  const lv=document.getElementById('filterLevel').value;
+  return pieces.map((p,i)=>({...p,_i:i})).filter(p=>{
+    const mQ=!q||p.title.toLowerCase().includes(q)||p.composer.toLowerCase().includes(q);
+    return mQ&&(!st||p.status===st)&&(!lv||p.level===lv);
+  }).sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+}
+
+function renderCards() {
+  // reset composer color maps each render so colors are stable
+  cColorMap={};
+  const data=getFiltered();
+  const tot=pieces.length, mai=pieces.filter(p=>p.status==='maîtrisé').length,
+        enc=pieces.filter(p=>p.status==='en-cours').length,
+        comp=new Set(pieces.map(p=>p.composer)).size;
+  document.getElementById('statsBar').innerHTML=
+    [[tot,'🎹','Morceaux','purple'],[mai,'✓','Maîtrisés','green'],[enc,'🎵','En cours','amber'],[comp,'♪','Compositeurs','rose']]
+    .map(([n,ic,l,cl])=>`<div class="stat"><div class="stat-icon ${cl}">${ic}</div><div class="stat-text"><span class="stat-num">${n}</span><span class="stat-label">${l}</span></div></div>`).join('');
+  document.getElementById('footer-count').textContent=`${data.length} / ${tot} morceaux`;
+  const wrap=document.getElementById('cardsWrap');
+  if(!data.length){wrap.innerHTML=`<div class="empty-state"><span class="empty-icon">𝄽</span><span style="font-size:14px;">Aucun morceau trouvé</span></div>`;return;}
+  wrap.innerHTML=data.map((p,i)=>`
+    <div class="card" style="animation-delay:${i*30}ms">
+      <div class="card-top">
+        <div class="card-badges">
+          <span class="badge badge-status-${p.status}">${SI[p.status]||''} ${SL[p.status]||p.status}</span>
+          <span class="badge badge-level-${p.level}">${LL[p.level]||p.level}</span>
+        </div>
+        <div class="card-actions">
+          <button class="card-action" data-action="edit" data-idx="${p._i}" title="Modifier">✏️</button>
+          <button class="card-action del" data-action="del" data-idx="${p._i}" title="Supprimer">🗑</button>
+        </div>
+      </div>
+      <div class="card-title">${esc(p.title)}</div>
+      <div class="card-composer">${composerBadge(p.composer)}</div>
+      <div class="card-meta">
+        ${p.startDate?`<span class="card-meta-item">📅 ${fmt(p.startDate)}${p.endDate?' → '+fmt(p.endDate):' → en cours'}</span>`:''}
+      </div>
+      ${p.notes?`<div class="card-notes"><span class="card-notes-dot"></span>${esc(p.notes)}</div>`:''}
+    </div>`).join('');
+}
+
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('[data-action]'); if(!btn) return;
+  const idx=parseInt(btn.dataset.idx,10);
+  if(btn.dataset.action==='edit') openModal(idx);
+  if(btn.dataset.action==='del') showDeleteConfirm(idx);
+  if(btn.dataset.action==='del-confirm') { pieces.splice(pendingDeleteIdx,1); save(); pendingDeleteIdx=null; document.getElementById('delete-confirm-wrap').innerHTML=''; renderCards(); }
+  if(btn.dataset.action==='del-cancel')  { pendingDeleteIdx=null; document.getElementById('delete-confirm-wrap').innerHTML=''; }
+});
+
+function showDeleteConfirm(idx) {
+  pendingDeleteIdx=idx; const p=pieces[idx];
+  document.getElementById('delete-confirm-wrap').innerHTML=`
+    <div class="delete-confirm">
+      <span>Supprimer « ${esc(p.title)} » ?</span>
+      <button class="btn-del-confirm" data-action="del-confirm">Supprimer</button>
+      <button class="btn-del-cancel" data-action="del-cancel">Annuler</button>
+    </div>`;
+}
+
+function openModal(idx=null) {
+  editingIdx=idx; const p=idx!==null?pieces[idx]:null;
+  document.getElementById('modal-title').textContent=idx!==null?'Modifier le morceau':'Ajouter un morceau';
+  document.getElementById('f-title').value   =p?p.title:'';
+  document.getElementById('f-composer').value=p?p.composer:'';
+  document.getElementById('f-level').value   =p?p.level:'intermédiaire';
+  document.getElementById('f-status').value  =p?p.status:'en-cours';
+  document.getElementById('f-start').value   =p?p.startDate:new Date().toISOString().slice(0,10);
+  document.getElementById('f-end').value     =p?p.endDate:'';
+  document.getElementById('f-notes').value   =p?p.notes:'';
+  document.getElementById('overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('f-title').focus(),50);
+}
+function closeModal() { document.getElementById('overlay').style.display='none'; editingIdx=null; }
+function overlayClick(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
+function savePiece() {
+  const title=document.getElementById('f-title').value.trim();
+  const composer=document.getElementById('f-composer').value.trim();
+  if(!title||!composer){alert('Titre et compositeur sont obligatoires.');return;}
+  const d={title,composer,level:document.getElementById('f-level').value,status:document.getElementById('f-status').value,startDate:document.getElementById('f-start').value,endDate:document.getElementById('f-end').value,notes:document.getElementById('f-notes').value.trim()};
+  if(editingIdx!==null) pieces[editingIdx]={...pieces[editingIdx],...d};
+  else pieces.push(d);
+  save(); closeModal(); renderCards();
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+function exportPDF() { window.print(); }
+
+function copyData() {
+  const data=localStorage.getItem(KEY)||JSON.stringify(pieces);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(data).then(()=>{
+      const btn=document.getElementById('btn-copy'),orig=btn.textContent;
+      btn.textContent='✓ Copié !'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)';
+      setTimeout(()=>{btn.textContent=orig;btn.style.color='';btn.style.borderColor='';},2500);
+    });
+  }
+}
+
+// ── TIMELINE ──
+function currentSY() { const n=new Date(); return n.getMonth()>=8?n.getFullYear():n.getFullYear()-1; }
+function syStart(sy) { return new Date(sy,8,1); }
+function syEnd(sy)   { return new Date(sy+1,7,31,23,59,59); }
+function syLabel(sy) { return `${sy} – ${sy+1}`; }
+function changeYear(d) { tlSY+=d; renderTimeline(); }
+
+function renderTimeline() {
+  tlColorMap={};
+  const start=syStart(tlSY), end=syEnd(tlSY), total=end-start, now=new Date();
+  const sySorted=pieces.filter(p=>p.startDate).map(p=>{const d=new Date(p.startDate);return d.getMonth()>=8?d.getFullYear():d.getFullYear()-1;});
+  const minSY=sySorted.length?Math.min(...sySorted):tlSY, maxSY=currentSY();
+  document.getElementById('yr-label').textContent=syLabel(tlSY);
+  document.getElementById('btn-prev').disabled=tlSY<=minSY;
+  document.getElementById('btn-next').disabled=tlSY>=maxSY;
+  document.getElementById('tl-legend').innerHTML=[...new Set(pieces.map(p=>p.composer))].map(c=>`<span class="leg-item"><span class="leg-dot" style="background:${tlColorFor(c)}"></span>${esc(c)}</span>`).join('');
+  const active=pieces.map((p,i)=>({...p,_i:i})).filter(p=>{
+    if(!p.startDate) return false;
+    const s=new Date(p.startDate), e=p.endDate?new Date(p.endDate):now;
+    return s<=end&&e>=start;
+  }).sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+  const grid=document.getElementById('tl-grid');
+  if(!active.length){grid.innerHTML=`<div class="tl-empty">Aucun morceau sur cette période</div>`;return;}
+  const isCur=tlSY===currentSY(), nowPct=isCur?((now-start)/total*100).toFixed(2):null;
+  const mNames=['Sep','Oct','Nov','Déc','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû'];
+  const mHeader=`<div class="tl-month-row">${mNames.map((m,i)=>{
+    const mi=(8+i)%12,my=mi>=8?tlSY:tlSY+1,cur=isCur&&mi===now.getMonth()&&my===now.getFullYear();
+    return `<div class="tl-m${cur?' now':''}">${m}</div>`;
+  }).join('')}</div>`;
+  const rows=active.map(p=>{
+    const s=new Date(p.startDate), e=p.endDate?new Date(p.endDate):now;
+    const cs=Math.max(s,start), ce=Math.min(e,end);
+    const left=((cs-start)/total*100).toFixed(2), wid=Math.max(0.5,((ce-cs)/total*100)).toFixed(2);
+    const col=tlColorFor(p.composer), todayLine=nowPct?`<div class="tl-now-line" style="left:${nowPct}%"></div>`:'';
+    return `<div class="tl-row">
+      <div class="tl-lbl"><span class="tl-lbl-title">${esc(p.title.length>28?p.title.slice(0,26)+'…':p.title)}</span><span class="tl-lbl-composer">${esc(p.composer)}</span></div>
+      <div class="tl-bar-area">${todayLine}
+        <div class="tl-bar" style="left:${left}%;width:${wid}%;background:${col};"
+          onmouseenter="showTip(event,${p._i})" onmouseleave="hideTip()" onmousemove="moveTip(event)"></div>
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML=mHeader+rows;
+}
+
+function showTip(e,idx) {
+  const p=pieces[idx]; if(!p) return;
+  document.getElementById('tooltip').innerHTML=`<strong>${esc(p.title)}</strong><em>${esc(p.composer)}</em><br>${fmt(p.startDate)||'?'} → ${p.endDate?fmt(p.endDate):'En cours'}${p.notes?`<br><span style="font-size:11px;color:var(--text2)">${esc(p.notes.slice(0,80))}${p.notes.length>80?'…':''}</span>`:''}`;
+  document.getElementById('tooltip').style.display='block'; moveTip(e);
+}
+function moveTip(e) { const t=document.getElementById('tooltip'); t.style.left=(e.clientX+14)+'px'; t.style.top=(e.clientY-8)+'px'; }
+function hideTip()  { document.getElementById('tooltip').style.display='none'; }
+
+load(); renderCards();
+</script>
+</body>
+</html>

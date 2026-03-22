@@ -1,74 +1,10 @@
 [
-  {
-    "title": "Aria BWV 516 (Petit livre d'Anna Magdalena Bach)",
-    "composer": "J.S. Bach",
-    "level": "débutant",
-    "status": "en-pause",
-    "startDate": "2021-10-14",
-    "endDate": "2021-11-18",
-    "notes": ""
-  },
-  {
-    "title": "Prélude & Fugue II (Do min) BWV 847",
-    "composer": "J.S. Bach",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2021-10-14",
-    "endDate": "2022-01-06",
-    "notes": ""
-  },
-  {
-    "title": "Rêverie",
-    "composer": "Debussy",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2021-10-14",
-    "endDate": "2022-01-06",
-    "notes": ""
-  },
-  {
-    "title": "Suite Française III (Si min) BWV 814",
-    "composer": "J.S. Bach",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2021-11-25",
-    "endDate": "2022-03-10",
-    "notes": ""
-  },
-  {
-    "title": "Carnaval Op.9 — Chiarina & Chopin",
-    "composer": "R. Schumann",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2022-01-06",
-    "endDate": "2022-02-24",
-    "notes": ""
-  },
-  {
-    "title": "6 variations sur le thème de la Molinera",
-    "composer": "Beethoven",
-    "level": "débutant",
-    "status": "en-pause",
-    "startDate": "2022-02-10",
-    "endDate": "2022-04-28",
-    "notes": ""
-  },
-  {
-    "title": "Danzas Españolas — Oriental & Andaluza",
-    "composer": "Granados",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2022-03-24",
-    "endDate": "2022-06-23",
-    "notes": ""
-  },
-  {
-    "title": "Sonate 19 (Mi min) Hoboken XVI:47",
-    "composer": "Haydn",
-    "level": "intermédiaire",
-    "status": "en-pause",
-    "startDate": "2022-06-16",
-    "endDate": "2022-09-29",
-    "notes": ""
-  }
+  {"title":"Aria BWV 516 (Petit livre Anna Magdalena Bach)","composer":"J.S. Bach","level":"debutant","status":"en-pause","startDate":"2021-10-14","endDate":"2021-11-18","notes":""},
+  {"title":"Prelude & Fugue II (Do min) BWV 847","composer":"J.S. Bach","level":"intermediaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
+  {"title":"Reverie","composer":"Debussy","level":"intermediaire","status":"en-pause","startDate":"2021-10-14","endDate":"2022-01-06","notes":""},
+  {"title":"Suite Francaise III (Si min) BWV 814","composer":"J.S. Bach","level":"intermediaire","status":"en-pause","startDate":"2021-11-25","endDate":"2022-03-10","notes":""},
+  {"title":"Carnaval Op.9 - Chiarina & Chopin","composer":"R. Schumann","level":"intermediaire","status":"en-pause","startDate":"2022-01-06","endDate":"2022-02-24","notes":""},
+  {"title":"6 variations sur le theme de la Molinera","composer":"Beethoven","level":"debutant","status":"en-pause","startDate":"2022-02-10","endDate":"2022-04-28","notes":""},
+  {"title":"Danzas Espanolas - Oriental & Andaluza","composer":"Granados","level":"intermediaire","status":"en-pause","startDate":"2022-03-24","endDate":"2022-06-23","notes":""},
+  {"title":"Sonate 19 (Mi min) Hoboken XVI:47","composer":"Haydn","level":"intermediaire","status":"en-pause","startDate":"2022-06-16","endDate":"2022-09-29","notes":""}
 ]

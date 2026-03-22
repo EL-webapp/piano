@@ -690,7 +690,8 @@ function exportPDF(){
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
   var margin=14,pageW=297,pageH=210;
-  var colW=[100,52,32,32,52];
+  var colW=[88,40,26,26,34,0];
+  colW[5]=pageW-margin*2-colW[0]-colW[1]-colW[2]-colW[3]-colW[4];
 
   function safe(str){
     return String(str||'').replace(/[^\x20-\x7E]/g,function(c){
@@ -743,7 +744,7 @@ function exportPDF(){
     return 34;
   }
 
-  var headers=['Titre','Compositeur','Statut','Niveau','Dates'];
+  var headers=['Titre','Compositeur','Statut','Niveau','Dates','Notes'];
   function drawTH(y){
     doc.setFillColor(240,237,232);
     doc.rect(margin,y,pageW-margin*2,7,'F');

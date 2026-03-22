@@ -296,10 +296,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <div class="video-overlay" id="video-overlay" style="display:none">
   <div class="video-header">
     <span class="video-title" id="video-viewer-title"></span>
-    <button class="btn-x" onclick="closeVideo()" style="font-size:22px;">✕</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn-s" id="btn-score-over" style="font-size:11px;padding:6px 12px;display:none" onclick="toggleScoreOver()">📄 Voir partition</button>
+      <button class="btn-x" onclick="closeVideo()" style="font-size:22px;">✕</button>
+    </div>
   </div>
   <div class="video-wrap">
     <iframe id="video-frame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  </div>
+  <!-- Partition par-dessus la vidéo -->
+  <div id="score-over" style="display:none;position:absolute;inset:56px 0 0 0;background:var(--surface);z-index:10;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);">
+      <span style="font-size:12px;color:var(--text2);font-style:italic;">🎵 Audio en cours — feuilletez la partition</span>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="pdfPrevPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">← Préc.</button>
+        <span id="pdf-page-info2" style="font-size:12px;color:var(--text2);min-width:80px;text-align:center;"></span>
+        <button onclick="pdfNextPage()" class="btn-s" style="font-size:12px;padding:6px 14px;">Suiv. →</button>
+        <button onclick="toggleScoreOver()" class="btn-x" style="font-size:18px;">✕</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow:auto;background:#525659;display:flex;justify-content:center;padding:16px;">
+      <canvas id="pdf-canvas2" style="display:block;max-width:100%;"></canvas>
+    </div>
   </div>
 </div>
 
@@ -463,23 +481,86 @@ function pdfUrl(piece){
   return 'https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/partitions/'+pdfFilename(piece);
 }
 
-// ── VIDEO VIEWER ──
-function ytEmbedUrl(url){
-  if(!url)return null;
-  var m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-  return m?'https://www.youtube.com/embed/'+m[1]+'?autoplay=1':null;
-}
+var currentVideoIdx=null;
+
 function openVideo(idx){
   var p=pieces[idx];
   var embed=ytEmbedUrl(p.videoUrl);
   if(!embed){toast('Lien YouTube invalide','var(--red)');return;}
+  currentVideoIdx=idx;
   document.getElementById('video-viewer-title').textContent=p.title+' — '+p.composer;
   document.getElementById('video-frame').src=embed;
   document.getElementById('video-overlay').style.display='flex';
+  // Affiche le bouton partition si le morceau en a une
+  var btnScore=document.getElementById('btn-score-over');
+  btnScore.style.display=p.pdfFile?'block':'none';
+  document.getElementById('score-over').style.display='none';
 }
+
+function toggleScoreOver(){
+  var so=document.getElementById('score-over');
+  var visible=so.style.display==='flex';
+  if(visible){
+    so.style.display='none';
+    document.getElementById('btn-score-over').textContent='📄 Voir partition';
+  } else {
+    so.style.display='flex';
+    so.style.flexDirection='column';
+    document.getElementById('btn-score-over').textContent='📄 Masquer partition';
+    // Charge le PDF dans le canvas2
+    if(currentVideoIdx!==null){
+      var p=pieces[currentVideoIdx];
+      loadPdfJs(function(){
+        pdfjsLib.getDocument(pdfUrl(p)).promise.then(function(doc){
+          pdfDoc=doc; pdfTotal=doc.numPages; pdfPage=1;
+          renderPdfPage2(1);
+        });
+      });
+    }
+  }
+}
+
+function renderPdfPage2(num){
+  document.getElementById('pdf-page-info2').textContent='Page '+num+' / '+pdfTotal;
+  pdfDoc.getPage(num).then(function(page){
+    var wrap=document.getElementById('score-over');
+    var maxW=Math.min(wrap.clientWidth-32, 800);
+    var vp=page.getViewport({scale:1});
+    var scale=maxW/vp.width;
+    var dpr=window.devicePixelRatio||1;
+    var viewport=page.getViewport({scale:scale*dpr});
+    var canvas=document.getElementById('pdf-canvas2');
+    var ctx=canvas.getContext('2d');
+    canvas.width=viewport.width;
+    canvas.height=viewport.height;
+    canvas.style.width=(viewport.width/dpr)+'px';
+    canvas.style.height=(viewport.height/dpr)+'px';
+    page.render({canvasContext:ctx,viewport:viewport});
+  });
+}
+
+// Override pdfPrevPage/pdfNextPage pour gérer les 2 canvas
+function pdfPrevPage(){
+  if(pdfPage<=1)return;
+  pdfPage--;
+  var so=document.getElementById('score-over');
+  if(so.style.display==='flex') renderPdfPage2(pdfPage);
+  else renderPdfPage(pdfPage);
+}
+function pdfNextPage(){
+  if(pdfPage>=pdfTotal)return;
+  pdfPage++;
+  var so=document.getElementById('score-over');
+  if(so.style.display==='flex') renderPdfPage2(pdfPage);
+  else renderPdfPage(pdfPage);
+}
+
 function closeVideo(){
   document.getElementById('video-overlay').style.display='none';
   document.getElementById('video-frame').src='';
+  document.getElementById('score-over').style.display='none';
+  currentVideoIdx=null;
+  pdfDoc=null;
 }
 var pdfjsLib=null, pdfDoc=null, pdfPage=1, pdfTotal=0, pdfRendering=false;
 
@@ -571,7 +652,7 @@ function renderCards(){
       enc=pieces.filter(function(p){return p.status==='en-cours';}).length,
       comp=new Set(pieces.map(function(p){return p.composer;})).size;
   document.getElementById('statsBar').innerHTML=
-    [[tot,'🎹','Morceaux','si-p'],[mai,'💪','Maîtrisés','si-g'],[enc,'😅','En cours','si-a'],[comp,'✍🏻','Compositeurs','si-r']]
+    [[tot,'🎹','Morceaux','si-p'],[mai,'💪','Maîtrisés','si-g'],[enc,'🎵','En cours','si-a'],[comp,'✍🏻','Compositeurs','si-r']]
     .map(function(x){return '<div class="stat"><div class="stat-icon '+x[3]+'">'+x[1]+'</div><div class="stat-text"><span class="stat-num">'+x[0]+'</span><span class="stat-label">'+x[2]+'</span></div></div>';}).join('');
   document.getElementById('fcount').textContent=data.length+' / '+tot+' morceaux';
   var wrap=document.getElementById('cardsWrap');
@@ -683,7 +764,29 @@ async function savePiece(){
   document.getElementById('btn-save').textContent='Enregistrer';
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closePDF();closeVideo();}});
-function exportPDF(){window.print();}
+function exportPDF(){
+  var rows=pieces.map(function(p){
+    return '<tr style="border-bottom:1px solid #ddd;">'
+      +'<td style="padding:8px 12px;font-family:Georgia,serif;font-size:13px;">'+esc(p.title)+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;color:#555;font-style:italic;">'+esc(p.composer)+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;">'+((SL[p.status]||p.status))+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;">'+((LL[p.level]||p.level))+'</td>'
+      +'<td style="padding:8px 12px;font-size:11px;color:#888;">'+(p.startDate?fmt(p.startDate):'')+''+(p.endDate?' → '+fmt(p.endDate):'')+'</td>'
+      +'<td style="padding:8px 12px;font-size:11px;color:#666;font-style:italic;">'+esc(p.notes||'')+'</td>'
+      +'</tr>';
+  }).join('');
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>Répertoire Piano — Elise</title>'
+    +'<style>body{font-family:-apple-system,sans-serif;padding:32px;color:#222;}h1{font-family:Georgia,serif;font-size:28px;margin-bottom:4px;}p{color:#888;font-size:12px;margin-bottom:24px;}table{width:100%;border-collapse:collapse;}th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#888;border-bottom:2px solid #1e3a6e;}tr:nth-child(even){background:#f7f5f2;}@media print{body{padding:16px;}}</style>'
+    +'</head><body>'
+    +'<h1>Mon Répertoire</h1><p>Elise &amp; Camille G. — '+new Date().toLocaleDateString('fr-FR')+'</p>'
+    +'<table><thead><tr><th>Titre</th><th>Compositeur</th><th>Statut</th><th>Niveau</th><th>Dates</th><th>Notes</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+  var w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
 
 // ── TIMELINE ──
 function curSY(){var n=new Date();return n.getMonth()>=8?n.getFullYear():n.getFullYear()-1;}

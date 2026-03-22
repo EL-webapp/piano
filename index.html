@@ -164,7 +164,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .pdf-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
 .pdf-upload-label{font-size:12px;color:var(--text2);}
 .pdf-upload-name{font-size:12px;color:var(--green);font-weight:500;margin-top:4px;}
-.modal-ft{padding:16px 24px 20px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);}
+.modal-ft{padding:16px 24px 20px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--surface);z-index:10;}
 .del-confirm{background:var(--red-soft);border:1px solid var(--red);border-radius:var(--radius-sm);padding:14px 16px;margin:0 32px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .del-confirm span{font-size:13px;color:var(--red);flex:1;}
 .btn-dc{background:var(--red);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;}
@@ -321,6 +321,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
             <div class="pdf-upload-label">📄 Glisse un PDF ici ou clique pour choisir</div>
             <div class="pdf-upload-name" id="pdf-name"></div>
           </div>
+          <button id="btn-del-pdf" onclick="deletePdf()" style="display:none;margin-top:8px;background:var(--red-soft);color:var(--red);border:1px solid var(--red);padding:7px 14px;border-radius:var(--radius-sm);font-family:var(--sans);font-size:12px;cursor:pointer;">🗑 Supprimer la partition</button>
         </div>
       </div>
     </div>
@@ -464,8 +465,15 @@ function renderPdfPage(num){
   document.getElementById('pdf-page-info').textContent='Page '+num+' / '+pdfTotal;
   pdfDoc.getPage(num).then(function(page){
     var wrap=document.getElementById('pdf-canvas-wrap');
-    var maxW=wrap.clientWidth-32,vp=page.getViewport({scale:1});
-    var dpr=window.devicePixelRatio||1,viewport=page.getViewport({scale:(maxW/vp.width)*dpr});
+    var dpr=window.devicePixelRatio||1;
+    var vp=page.getViewport({scale:1});
+    // Ajuste au mieux selon largeur ET hauteur disponible
+    var maxW=wrap.clientWidth-32;
+    var maxH=wrap.clientHeight-60;
+    var scaleW=maxW/vp.width;
+    var scaleH=maxH/vp.height;
+    var scale=Math.min(scaleW,scaleH);
+    var viewport=page.getViewport({scale:scale*dpr});
     var canvas=document.getElementById('pdf-canvas'),ctx=canvas.getContext('2d');
     canvas.width=viewport.width;canvas.height=viewport.height;
     canvas.style.width=(viewport.width/dpr)+'px';canvas.style.height=(viewport.height/dpr)+'px';
@@ -620,10 +628,23 @@ function openModal(idx){
   document.getElementById('f-video').value=p?p.videoUrl||'':'';
   document.getElementById('f-pdf').value='';
   document.getElementById('pdf-name').textContent=p&&p.pdfFile?'Partition: '+p.pdfFile:'';
+  document.getElementById('btn-del-pdf').style.display=p&&p.pdfFile?'block':'none';
   document.getElementById('overlay').style.display='flex';
   setTimeout(function(){document.getElementById('f-title').focus();},50);
 }
 function closeModal(){document.getElementById('overlay').style.display='none';editIdx=null;pendingPdfB64=null;}
+
+function deletePdf(){
+  if(!confirm('Supprimer la partition de ce morceau ?'))return;
+  if(editIdx!==null){
+    pieces[editIdx].pdfFile=null;
+    ghSave('Suppression partition: '+pieces[editIdx].title);
+    renderCards();
+  }
+  document.getElementById('pdf-name').textContent='';
+  document.getElementById('btn-del-pdf').style.display='none';
+  toast('Partition supprimée','var(--green)');
+}
 function overlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
 
 async function savePiece(){

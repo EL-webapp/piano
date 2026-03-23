@@ -226,5 +226,16 @@
     "notes": "",
     "videoUrl": "",
     "pdfFile": null
+  },
+  {
+    "title": "Notturno",
+    "composer": "E. Grieg",
+    "level": "intermediaire",
+    "status": "en-pause",
+    "startDate": "2024-12-19",
+    "endDate": "2025-01-30",
+    "notes": "",
+    "videoUrl": "",
+    "pdfFile": null
   }
 ]

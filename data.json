@@ -182,5 +182,16 @@
     "notes": "",
     "videoUrl": "",
     "pdfFile": null
+  },
+  {
+    "title": "Barcarolle",
+    "composer": "Alkan",
+    "level": "intermediaire",
+    "status": "en-pause",
+    "startDate": "2023-10-12",
+    "endDate": "2023-11-15",
+    "notes": "",
+    "videoUrl": "",
+    "pdfFile": null
   }
 ]

@@ -588,7 +588,7 @@ function renderCards(){
     .map(function(x){return '<div class="stat"><div class="stat-icon '+x[3]+'">'+x[1]+'</div><div class="stat-text"><span class="stat-num">'+x[0]+'</span><span class="stat-label">'+x[2]+'</span></div></div>';}).join('');
   document.getElementById('fcount').textContent=data.length+' / '+tot+' morceaux';
   var wrap=document.getElementById('cardsWrap');
-  if(!data.length){wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:16px">𝄽</div>Aucun morceau trouvé</div>';return;}
+  if(!data.length){wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:16px">🎼</div>Aucun morceau trouvé</div>';return;}
   var ro=isRO();
   wrap.innerHTML=data.map(function(p,i){
     var hasPdf=!!p.pdfFile,hasVideo=!!p.videoUrl,footer='';
